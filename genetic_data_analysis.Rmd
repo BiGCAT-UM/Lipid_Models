@@ -1,0 +1,139 @@
+---
+title: "Genetic background lipids"
+author: 
+- "DeniseSl22"
+date: "01/08/2022"
+output: html_notebook
+---
+
+In order to establish the potential genetic relevance of a certain modeling species in lipid metabolism, we take these steps:
+1. First, we obtain human genes from three databases (Gene Ontology, Reactome, and WikiPathways) together to establish a list of relevant proteins in lipid metabolism.
+2. Second, we compare these three databases together, while grouping on EC-nomenclature/LIPID MAPS ontology.
+3. Thirds, we use the overlapping genes to compare against other modeling species (mouse, zebrafish, yeast, worm), to represent which genes can be found in which species, and might make a suitable modeling organism.
+
+## 1. Relevant proteins from Databases: 
+
+From the Quick-GO website (https://www.ebi.ac.uk/QuickGO/), we downloaded data based on the following criteria:
+I. Taxon: 9606 (Homo sapiens, human).
+II. Gene product type: Proteins, Reviewed (Swiss-Prot), all settings for Proteomes.
+III. GO terms: lipid metabolic process (GO:0006629).
+
+Data was downloaded on: 1st of August, with 5199 annotations, as a TSV file.
+```{r}
+##GO terms
+go_terms <- read.delim(file = "QuickGO-annotations-1659356807403-20220801.tsv", header = TRUE, sep = '\t')
+go_terms_unique <- unique(go_terms$SYMBOL)
+
+```
+
+```{r}
+##Reactome
+if(!"SPARQL" %in% installed.packages()){
+  install.packages("SPARQL")
+}
+library(SPARQL)
+##Connect to Endpoint WikiPathways
+endpointwp <- "https://sparql.wikipathways.org/sparql"
+
+## 1. Query metadata:
+queryMetadata <-
+"SELECT DISTINCT ?dataset (str(?titleLit) as ?title) ?date ?license 
+WHERE {
+   ?dataset a void:Dataset ;
+   dcterms:title ?titleLit ;
+   dcterms:license ?license ;
+   pav:createdOn ?date .
+ }"
+ #below code should be performed first to handle the ssl certificate error
+options(RCurlOptions = list(cainfo = paste0( tempdir() , "/cacert.pem" ), ssl.verifypeer = FALSE))
+resultsMetadata <- SPARQL(endpointwp,queryMetadata,curl_args=list(useragent=R.version.string))
+showresultsMetadata <- resultsMetadata$results
+remove(queryMetadata, resultsMetadata)
+
+## 2. Query Reactome lipid PWs, through HGNC symbols:
+queryReactome <-
+"PREFIX cur:            <http://vocabularies.wikipathways.org/wp#Curation:> #to differentiate between Reactome and WP PWs.
+
+select distinct (str(?wpid) as ?pathway) (count(distinct ?lipidID) AS ?LipidsInPWs) (fn:substring(?hgncId,37) as ?HGNC) 
+where {
+  ?pathwayRes a wp:Pathway ;                   #Define what is a pathway
+              wp:organismName 'Homo sapiens' ; #Filter pathways on species Human
+              dcterms:identifier ?wpid ;       #Obtain identifier of pathway
+              wp:ontologyTag cur:Reactome_Approved .  #Reactome: Reactome_Approved . WP: Curation:AnalysisCollection
+  
+  ?metabolite wp:bdbLipidMaps ?lipidID ;       #Find the LIPID MAPS identifier for a certain metabolite
+              dcterms:isPartOf ?pathwayRes .   #Connect lipid to PW 
+    
+  
+  ?protein wp:bdbHgncSymbol ?hgncId ;          #Find proteins based on HGNC symbol
+           dcterms:isPartOf ?pathwayRes .      #Connect protein to PW
+}
+ORDER BY DESC(?LipidsInPWs)
+"
+##Execute query:
+resultsReactome <- SPARQL(endpointwp,queryReactome,curl_args=list(useragent=R.version.string))
+showresultsReactome <- resultsReactome$results
+remove(queryReactome, resultsReactome)
+
+##Only retain PWs with 4 or more lipids involved, and create string of unieuq HGNC symbols.
+reactome_terms <- showresultsReactome[showresultsReactome$LipidsInPWs>=4, ]
+reactome_terms_unique <- unique(reactome_terms$HGNC)
+```
+
+```{r}
+##WikiPathways
+## 3. Query WikiPathways lipid PWs, through HGNC symbols:
+queryWikiPathways <-
+"PREFIX cur:            <http://vocabularies.wikipathways.org/wp#Curation:> #to differentiate between Reactome and WP PWs.
+
+select distinct (str(?wpid) as ?pathway) (count(distinct ?lipidID) AS ?LipidsInPWs) (fn:substring(?hgncId,37) as ?HGNC) 
+where {
+  ?pathwayRes a wp:Pathway ;                   #Define what is a pathway
+              wp:organismName 'Homo sapiens' ; #Filter pathways on species Human
+              dcterms:identifier ?wpid ;       #Obtain identifier of pathway
+              wp:ontologyTag cur:AnalysisCollection .  #Reactome: Reactome_Approved . WP: Curation:AnalysisCollection
+  
+  ?metabolite wp:bdbLipidMaps ?lipidID ;       #Find the LIPID MAPS identifier for a certain metabolite
+              dcterms:isPartOf ?pathwayRes .   #Connect lipid to PW 
+    
+  
+  ?protein wp:bdbHgncSymbol ?hgncId ;          #Find proteins based on HGNC symbol
+           dcterms:isPartOf ?pathwayRes .      #Connect protein to PW
+}
+ORDER BY DESC(?LipidsInPWs)
+"
+##Execute query:
+resultsWikiPathways <- SPARQL(endpointwp,queryWikiPathways,curl_args=list(useragent=R.version.string))
+showresultsWikiPathways <- resultsWikiPathways$results
+remove(queryWikiPathways, resultsWikiPathways)
+
+##Only retain PWs with 4 or more lipids involved, and create string of unieuq HGNC symbols.
+wikipathways_terms <- showresultsWikiPathways[showresultsWikiPathways$LipidsInPWs>=4, ]
+wikipathways_terms_unique <- unique(wikipathways_terms$HGNC)
+
+```
+
+## 2. Compare databases
+
+From the HGNC biomart webiste (http://biomart.genenames.org/), we downloaded data based on the following criteria:
+I. Start search by selecting "gene"
+II. Status: Approved
+III. Attributes: HGNC ID, Status, Approved Symbol, Approved Name.
+IV. Protein resources: Enzyme (EC) ID.
+
+HGNC to EC-code data was downloaded on: 1st of August, with 43295 lines, as a TSV file.
+```{r}
+# Read the HGNC to EC-code file:
+EC_terms <- read.delim(file = "HGNC_biomart.txt", header = TRUE, sep = '\t', na.strings = "")
+# Filter out HGNC symbols without a EC-code.
+EC_terms_HGNC <- EC_terms[complete.cases(EC_terms$Enzyme..EC..ID), c("Approved.symbol","Enzyme..EC..ID")]
+```
+
+```{r}
+##Link data from three databases to EC-codes:
+```
+
+```{r}
+##Create a chord diagram to visualize overlap:
+```
+
