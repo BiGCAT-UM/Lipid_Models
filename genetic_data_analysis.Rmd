@@ -130,10 +130,39 @@ EC_terms_HGNC <- EC_terms[complete.cases(EC_terms$Enzyme..EC..ID), c("Approved.s
 ```
 
 ```{r}
+if(!"dplyr" %in% installed.packages()){
+  install.packages("dplyr")
+}
+library(dplyr)
+
 ##Link data from three databases to EC-codes:
+EC_terms_GO <-  EC_terms_HGNC[EC_terms_HGNC$Approved.symbol %in% go_terms_unique, ]
+EC_terms_Reactome <-  EC_terms_HGNC[EC_terms_HGNC$Approved.symbol %in% reactome_terms_unique, ]
+EC_terms_WikiPathways <-  EC_terms_HGNC[EC_terms_HGNC$Approved.symbol %in% wikipathways_terms_unique, ]
+
+combined_data12 <- merge(x = EC_terms_GO, y = EC_terms_Reactome, by = "Approved.symbol", all.x = TRUE, all.y=TRUE, sort = TRUE)
+combined_data_all <- merge(x = combined_data12 , y = EC_terms_WikiPathways, by = "Approved.symbol", all.x = TRUE, all.y=TRUE, sort = TRUE)
+
 ```
 
 ```{r}
 ##Create a chord diagram to visualize overlap:
+##Example:
+# Create an adjacency matrix: 
+# a list of connections between 20 origin nodes, and 5 destination nodes:
+numbers <- sample(c(1:1000), 100, replace = T)
+data <- matrix( numbers, ncol=5)
+rownames(data) <- paste0("orig-", seq(1,20))
+colnames(data) <- paste0("dest-", seq(1,5))
+
+if(!"circlize" %in% installed.packages()){
+  install.packages("circlize")
+}
+# Load the circlize library
+library(circlize)
+ 
+# Make the circular plot
+chordDiagram(data, transparency = 0.5)
+
 ```
 
