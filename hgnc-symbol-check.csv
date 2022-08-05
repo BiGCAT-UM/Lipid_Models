@@ -1,0 +1,12 @@
+Input,Match type,Approved symbol,Approved name,HGNC ID,Location
+GBA,Previous symbol,GBA1,glucosylceramidase beta 1,HGNC:4177,1q22
+ACOT7L,Unmatched,,,,
+FAM126B,Previous symbol,HYCC2,hyccin PI4KA lipid kinase complex subunit 2,HGNC:28593,2q33.1
+FAM126A,Previous symbol,HYCC1,hyccin PI4KA lipid kinase complex subunit 1,HGNC:24587,7p15.3
+ARNTL,Previous symbol,BMAL1,basic helix-loop-helix ARNT like 1,HGNC:701,11p15.3
+VNN3,Previous symbol,VNN3P,"vanin 3, pseudogene",HGNC:16431,6q23.2
+H4-16,Previous symbol,H4C16,H4 histone 16,HGNC:20510,12p12.3
+H2BS1,Previous symbol,H2BC12L,H2B clustered histone 12 like,HGNC:4762,21q22.3
+ARNTL2,Previous symbol,BMAL2,basic helix-loop-helix ARNT like 2,HGNC:18984,12p11.23
+H2BU1,Previous symbol,H2BC26,H2B clustered histone 26,HGNC:20514,1q42.13
+CBSL,Entry withdrawn,CBSL,,HGNC:51829,

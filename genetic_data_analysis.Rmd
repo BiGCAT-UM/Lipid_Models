@@ -125,27 +125,155 @@ HGNC to EC-code data was downloaded on: 1st of August, with 43295 lines, as a TS
 ```{r}
 # Read the HGNC to EC-code file:
 EC_terms <- read.delim(file = "HGNC_biomart.txt", header = TRUE, sep = '\t', na.strings = "")
-# Filter out HGNC symbols without a EC-code.
-EC_terms_HGNC <- EC_terms[complete.cases(EC_terms$Enzyme..EC..ID), c("Approved.symbol","Enzyme..EC..ID")]
+# Add 'unclassified' iso 'NA' values
+EC_terms <- replace(EC_terms, is.na(EC_terms), "unclassified")
+# Keep only relevant columns:
+EC_terms_HGNC <- EC_terms[, c("Approved.symbol","Enzyme..EC..ID")]
+
 ```
 
+Link the EC codes to HGNC symbols for each database, and combine the data in one dataframe:
 ```{r}
+## Find HGNC symbols that are not recognized, for data curation:
+EC_terms_GO_not <-  setdiff(go_terms_unique, EC_terms_HGNC$Approved.symbol) 
+EC_terms_Reactome_not <-  setdiff(reactome_terms_unique, EC_terms_HGNC$Approved.symbol) 
+EC_terms_WikiPathways_not <-  setdiff(wikipathways_terms_unique, EC_terms_HGNC$Approved.symbol) 
+
+##TODO: Map these HGNC IDs to automatically updated to new entries through BridgeDb using secondary to primary mapping.
+
+## Find these HGNC symbols in the 'multi-symbol-checker' (https://www.genenames.org/tools/multi-symbol-checker/), 
+## Manually remove the first row 'sep=', otherwise the file cannot be read in properly
+## and read in CSV download:
+HGNC_mapping_terms <- read.csv(file = "hgnc-symbol-check.csv", header = TRUE, na.strings = "")
+
+#Create new array to compare changes later:
+go_terms_new <- go_terms_unique
+reactome_terms_new <- reactome_terms_unique
+wikipathways_terms_new <- wikipathways_terms_unique
+
+##Replace the symbols if 'match.type' == 	'Previous symbol', otherwise remove the entry
+#GO
+for (i in 1:nrow(HGNC_mapping_terms)) {
+    if (HGNC_mapping_terms$Match.type[i] == 'Previous symbol') {
+    #Update entry
+    go_terms_new <- replace(go_terms_new, go_terms_new == HGNC_mapping_terms$Input[i], HGNC_mapping_terms$Approved.symbol[i])
+    }else if(HGNC_mapping_terms$Match.type[i] != 'Previous symbol'){
+    #Remove entry
+    go_terms_new <-  replace(go_terms_new, go_terms_new == HGNC_mapping_terms$Input[i], 'remove')
+    go_terms_new <- go_terms_new[!go_terms_new %in% 'remove']
+    }
+}
+
+#Reactome
+for (i in 1:nrow(HGNC_mapping_terms)) {
+    if (HGNC_mapping_terms$Match.type[i] == 'Previous symbol') {
+    #Update entry
+    reactome_terms_new <- replace(reactome_terms_new, reactome_terms_new == HGNC_mapping_terms$Input[i], HGNC_mapping_terms$Approved.symbol[i])
+    }else if(HGNC_mapping_terms$Match.type[i] != 'Previous symbol'){
+    #Remove entry
+    reactome_terms_new <- replace(reactome_terms_new, reactome_terms_new == HGNC_mapping_terms$Input[i], 'remove')
+    reactome_terms_new <- reactome_terms_new[!reactome_terms_new %in% 'remove']
+    }
+}
+
+#WikiPathways
+for (i in 1:nrow(HGNC_mapping_terms)) {
+    if (HGNC_mapping_terms$Match.type[i] == 'Previous symbol') {
+    #Update entry
+    wikipathways_terms_new <- replace(wikipathways_terms_new, wikipathways_terms_new == HGNC_mapping_terms$Input[i], HGNC_mapping_terms$Approved.symbol[i])
+    }else if(HGNC_mapping_terms$Match.type[i] != 'Previous symbol'){
+    #Remove entry
+    wikipathways_terms_new <- replace(wikipathways_terms_new, wikipathways_terms_new == HGNC_mapping_terms$Input[i], 'remove')
+    wikipathways_terms_new <- wikipathways_terms_new[!wikipathways_terms_new %in% 'remove']
+    }
+}
+
 if(!"dplyr" %in% installed.packages()){
   install.packages("dplyr")
 }
 library(dplyr)
 
 ##Link data from three databases to EC-codes:
-EC_terms_GO <-  EC_terms_HGNC[EC_terms_HGNC$Approved.symbol %in% go_terms_unique, ]
-EC_terms_Reactome <-  EC_terms_HGNC[EC_terms_HGNC$Approved.symbol %in% reactome_terms_unique, ]
-EC_terms_WikiPathways <-  EC_terms_HGNC[EC_terms_HGNC$Approved.symbol %in% wikipathways_terms_unique, ]
+EC_terms_GO <-  EC_terms_HGNC[EC_terms_HGNC$Approved.symbol %in% go_terms_new, ]
+EC_terms_Reactome <-  EC_terms_HGNC[EC_terms_HGNC$Approved.symbol %in% reactome_terms_new, ]
+EC_terms_WikiPathways <-  EC_terms_HGNC[EC_terms_HGNC$Approved.symbol %in% wikipathways_terms_new, ]
 
+##Combine data
 combined_data12 <- merge(x = EC_terms_GO, y = EC_terms_Reactome, by = "Approved.symbol", all.x = TRUE, all.y=TRUE, sort = TRUE)
 combined_data_all <- merge(x = combined_data12 , y = EC_terms_WikiPathways, by = "Approved.symbol", all.x = TRUE, all.y=TRUE, sort = TRUE)
 
+#Rename the columns:
+colnames(combined_data_all) <- c("HGNC", "GO", "Reactome", "WikiPathways")
+
 ```
 
+Convert data to adjacency matrix:
 ```{r}
+#create data backup:
+combined_data_noDuplicates <- combined_data_all
+# Remove duplicate HGNC terms, since several HGNC terms have multiple EC-codes (e.g. AADAT has EC-code 2.6.1.7 and 2.6.1.39):
+combined_data_noDuplicates <- combined_data_noDuplicates %>% distinct(combined_data_noDuplicates$HGNC , .keep_all = TRUE)
+#Remove last column added by distinct method
+combined_data_noDuplicates <- subset(combined_data_noDuplicates, select = -c(5) )
+##Count entries for each column, to see if this matches with new terms and we're not forgetting some proteins along the way!
+length(go_terms_new) == sum(!is.na(combined_data_noDuplicates$GO))
+length(reactome_terms_new) == sum(!is.na(combined_data_noDuplicates$Reactome))
+length(wikipathways_terms_new) == sum(!is.na(combined_data_noDuplicates$WikiPathways))
+
+# Sort the columns based on HGNC symbol:
+combined_data_noDuplicates <- combined_data_noDuplicates[order(combined_data_noDuplicates$HGNC),]
+
+##Labels for EC classes:
+# EC 1: Oxidoreductases
+# EC 2: Transferases
+# EC 3: Hydrolases
+# EC 4: Lyases
+# EC 5: Isomerases
+# EC 6: Ligases
+# EC 7: Translocases
+
+##Unify the EC entries to their class name:
+# GO
+combined_data_noDuplicates <- combined_data_noDuplicates%>%mutate(GO_class = case_when(
+  startsWith(combined_data_noDuplicates$GO, '1.') ~ 'Oxidoreductases',
+  startsWith(combined_data_noDuplicates$GO, '2.') ~ 'Transferases',
+  startsWith(combined_data_noDuplicates$GO, '3.') ~ 'Hydrolases',
+  startsWith(combined_data_noDuplicates$GO, '4.') ~ 'Lyases',
+  startsWith(combined_data_noDuplicates$GO, '5.') ~ 'Isomerases',
+  startsWith(combined_data_noDuplicates$GO, '6.') ~ 'Ligases',
+  startsWith(combined_data_noDuplicates$GO, '7.') ~ 'Translocases',
+  is.na(combined_data_noDuplicates$GO) ~ combined_data_noDuplicates$GO, 
+  TRUE ~ combined_data_noDuplicates$GO
+))
+
+# Reactome (Re)
+combined_data_noDuplicates <- combined_data_noDuplicates%>%mutate(Re_class = case_when(
+  startsWith(combined_data_noDuplicates$Reactome, '1.') ~ 'Oxidoreductases',
+  startsWith(combined_data_noDuplicates$Reactome, '2.') ~ 'Transferases',
+  startsWith(combined_data_noDuplicates$Reactome, '3.') ~ 'Hydrolases',
+  startsWith(combined_data_noDuplicates$Reactome, '4.') ~ 'Lyases',
+  startsWith(combined_data_noDuplicates$Reactome, '5.') ~ 'Isomerases',
+  startsWith(combined_data_noDuplicates$Reactome, '6.') ~ 'Ligases',
+  startsWith(combined_data_noDuplicates$Reactome, '7.') ~ 'Translocases',
+  is.na(combined_data_noDuplicates$Reactome) ~ combined_data_noDuplicates$Reactome, 
+  TRUE ~ combined_data_noDuplicates$Reactome
+))
+
+# WikiPathways (WP)
+combined_data_noDuplicates <- combined_data_noDuplicates%>%mutate(WP_class = case_when(
+  startsWith(combined_data_noDuplicates$WikiPathways, '1.') ~ 'Oxidoreductases',
+  startsWith(combined_data_noDuplicates$WikiPathways, '2.') ~ 'Transferases',
+  startsWith(combined_data_noDuplicates$WikiPathways, '3.') ~ 'Hydrolases',
+  startsWith(combined_data_noDuplicates$WikiPathways, '4.') ~ 'Lyases',
+  startsWith(combined_data_noDuplicates$WikiPathways, '5.') ~ 'Isomerases',
+  startsWith(combined_data_noDuplicates$WikiPathways, '6.') ~ 'Ligases',
+  startsWith(combined_data_noDuplicates$WikiPathways, '7.') ~ 'Translocases',
+  is.na(combined_data_noDuplicates$WikiPathways) ~ combined_data_noDuplicates$WikiPathways, 
+  TRUE ~ combined_data_noDuplicates$WikiPathways
+))
+
+#Count overlapping terms for adjacency matrix:
+
 ##Create a chord diagram to visualize overlap:
 ##Example:
 # Create an adjacency matrix: 
