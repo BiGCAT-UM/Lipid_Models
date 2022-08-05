@@ -235,62 +235,99 @@ combined_data_noDuplicates <- combined_data_noDuplicates[order(combined_data_noD
 ##Unify the EC entries to their class name:
 # GO
 combined_data_noDuplicates <- combined_data_noDuplicates%>%mutate(GO_class = case_when(
-  startsWith(combined_data_noDuplicates$GO, '1.') ~ 'Oxidoreductases',
-  startsWith(combined_data_noDuplicates$GO, '2.') ~ 'Transferases',
-  startsWith(combined_data_noDuplicates$GO, '3.') ~ 'Hydrolases',
-  startsWith(combined_data_noDuplicates$GO, '4.') ~ 'Lyases',
-  startsWith(combined_data_noDuplicates$GO, '5.') ~ 'Isomerases',
-  startsWith(combined_data_noDuplicates$GO, '6.') ~ 'Ligases',
-  startsWith(combined_data_noDuplicates$GO, '7.') ~ 'Translocases',
+  startsWith(combined_data_noDuplicates$GO, '1.') ~ 'GO_1',
+  startsWith(combined_data_noDuplicates$GO, '2.') ~ 'GO_2',
+  startsWith(combined_data_noDuplicates$GO, '3.') ~ 'GO_3',
+  startsWith(combined_data_noDuplicates$GO, '4.') ~ 'GO_4',
+  startsWith(combined_data_noDuplicates$GO, '5.') ~ 'GO_5',
+  startsWith(combined_data_noDuplicates$GO, '6.') ~ 'GO_6',
+  startsWith(combined_data_noDuplicates$GO, '7.') ~ 'GO_7',
   is.na(combined_data_noDuplicates$GO) ~ combined_data_noDuplicates$GO, 
-  TRUE ~ combined_data_noDuplicates$GO
+  TRUE ~ 'GO_U'
 ))
 
 # Reactome (Re)
 combined_data_noDuplicates <- combined_data_noDuplicates%>%mutate(Re_class = case_when(
-  startsWith(combined_data_noDuplicates$Reactome, '1.') ~ 'Oxidoreductases',
-  startsWith(combined_data_noDuplicates$Reactome, '2.') ~ 'Transferases',
-  startsWith(combined_data_noDuplicates$Reactome, '3.') ~ 'Hydrolases',
-  startsWith(combined_data_noDuplicates$Reactome, '4.') ~ 'Lyases',
-  startsWith(combined_data_noDuplicates$Reactome, '5.') ~ 'Isomerases',
-  startsWith(combined_data_noDuplicates$Reactome, '6.') ~ 'Ligases',
-  startsWith(combined_data_noDuplicates$Reactome, '7.') ~ 'Translocases',
+  startsWith(combined_data_noDuplicates$Reactome, '1.') ~ 'Re_1',
+  startsWith(combined_data_noDuplicates$Reactome, '2.') ~ 'Re_2',
+  startsWith(combined_data_noDuplicates$Reactome, '3.') ~ 'Re_3',
+  startsWith(combined_data_noDuplicates$Reactome, '4.') ~ 'Re_4',
+  startsWith(combined_data_noDuplicates$Reactome, '5.') ~ 'Re_5',
+  startsWith(combined_data_noDuplicates$Reactome, '6.') ~ 'Re_6',
+  startsWith(combined_data_noDuplicates$Reactome, '7.') ~ 'Re_7',
   is.na(combined_data_noDuplicates$Reactome) ~ combined_data_noDuplicates$Reactome, 
-  TRUE ~ combined_data_noDuplicates$Reactome
+  TRUE ~ 'Re_U'
 ))
 
 # WikiPathways (WP)
 combined_data_noDuplicates <- combined_data_noDuplicates%>%mutate(WP_class = case_when(
-  startsWith(combined_data_noDuplicates$WikiPathways, '1.') ~ 'Oxidoreductases',
-  startsWith(combined_data_noDuplicates$WikiPathways, '2.') ~ 'Transferases',
-  startsWith(combined_data_noDuplicates$WikiPathways, '3.') ~ 'Hydrolases',
-  startsWith(combined_data_noDuplicates$WikiPathways, '4.') ~ 'Lyases',
-  startsWith(combined_data_noDuplicates$WikiPathways, '5.') ~ 'Isomerases',
-  startsWith(combined_data_noDuplicates$WikiPathways, '6.') ~ 'Ligases',
-  startsWith(combined_data_noDuplicates$WikiPathways, '7.') ~ 'Translocases',
+  startsWith(combined_data_noDuplicates$WikiPathways, '1.') ~ 'WP_1',
+  startsWith(combined_data_noDuplicates$WikiPathways, '2.') ~ 'WP_2',
+  startsWith(combined_data_noDuplicates$WikiPathways, '3.') ~ 'WP_3',
+  startsWith(combined_data_noDuplicates$WikiPathways, '4.') ~ 'WP_4',
+  startsWith(combined_data_noDuplicates$WikiPathways, '5.') ~ 'WP_5',
+  startsWith(combined_data_noDuplicates$WikiPathways, '6.') ~ 'WP_6',
+  startsWith(combined_data_noDuplicates$WikiPathways, '7.') ~ 'WP_7',
   is.na(combined_data_noDuplicates$WikiPathways) ~ combined_data_noDuplicates$WikiPathways, 
-  TRUE ~ combined_data_noDuplicates$WikiPathways
+  TRUE ~ 'WP_U'
 ))
 
-#Count overlapping terms for adjacency matrix:
+if(!"reshape2" %in% installed.packages()){
+  install.packages("reshape2")
+}
+if(!"reshape" %in% installed.packages()){
+  install.packages("reshape")
+}
+library(reshape2) 
+library(reshape) 
+
+#Keep only relevant columns
+GO_Re <- combined_data_noDuplicates[,c(5,6)]
+GO_WP <- combined_data_noDuplicates[,c(5,7)]
+WP_Re <- combined_data_noDuplicates[,c(6,7)]
+
+#Melt data to obtain an edge list
+melt_data_GO_Re <- na.omit(melt(GO_Re, id = c('GO_class'))) 
+melt_data_GO_WP <- na.omit(melt(GO_WP, id = c('GO_class'))) 
+melt_data_WP_Re <- na.omit(melt(WP_Re, id = c('Re_class'))) 
+
+#Merge data back together
+lst <- mget(ls(pattern='^melt_data_'))
+list2env(lapply(lst,`[`,-2), envir=.GlobalEnv)
+names(melt_data_WP_Re)[1] <- names(melt_data_GO_Re)[1]
+merged_comparison <-  do.call("rbind", list(melt_data_GO_Re, melt_data_GO_WP, melt_data_WP_Re))
+names(merged_comparison) <- c('Database1','DataBase2')
+
+##Calculate occurance (edge weight)
+#if(!"plyr" %in% installed.packages()){
+#  install.packages("plyr")
+#}
+#library(plyr)
+#merged_comparison_weight <- ddply(merged_comparison, .(Database1,DataBase2), nrow)
+#names(merged_comparison_weight)[3] <- 'weight'
+##Count unique entries in dataset before constructing the matrix size:
+#unique_edges <-  merged_comparison_weight %>% 
+#  select(Database1, DataBase2) %>% 
+#  t %>% c %>% unique
+
+##Use the igraph library to calculate the adjacency matrix:
+if(!"igraph" %in% installed.packages()){
+  install.packages("igraph")
+}
+library(igraph)
+adjacencyData <- as.matrix(get.adjacency(graph.data.frame(merged_comparison)))
 
 ##Create a chord diagram to visualize overlap:
-##Example:
-# Create an adjacency matrix: 
-# a list of connections between 20 origin nodes, and 5 destination nodes:
-numbers <- sample(c(1:1000), 100, replace = T)
-data <- matrix( numbers, ncol=5)
-rownames(data) <- paste0("orig-", seq(1,20))
-colnames(data) <- paste0("dest-", seq(1,5))
-
+# Charge the circlize library
 if(!"circlize" %in% installed.packages()){
   install.packages("circlize")
 }
-# Load the circlize library
 library(circlize)
  
 # Make the circular plot
-chordDiagram(data, transparency = 0.5)
+chordDiagram(adjacencyData, transparency = 0.5)
+
+##TODO: update visualization, so labels are more readable.
 
 ```
 
