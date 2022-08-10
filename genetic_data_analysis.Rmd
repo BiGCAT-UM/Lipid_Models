@@ -188,6 +188,57 @@ for (i in 1:nrow(HGNC_mapping_terms)) {
     }
 }
 
+```
+
+Visualize overlap in Venn diagram:
+```{r}
+if(!"VennDiagram" %in% installed.packages()){install.packages("VennDiagram")}
+if(!"RColorBrewer" %in% installed.packages()){install.packages("RColorBrewer")}
+# Load library
+library(VennDiagram)
+# Prepare a palette of 3 colors with R colorbrewer:
+library(RColorBrewer)
+myCol <- brewer.pal(3, "Pastel2")
+##Ignore log messages:
+futile.logger::flog.threshold(futile.logger::ERROR, name = "VennDiagramLogger")
+
+# Chart
+venn.diagram(
+        x = list(go_terms_new, reactome_terms_new, wikipathways_terms_new),
+        category.names = c("Gene Ontology" , "Reactome" , "WikiPathways"),
+        filename = 'Overlap_GO_Re_WP.png',
+        output=TRUE,
+        
+        # Output features
+        imagetype="png" ,
+        height = 650 , 
+        width = 700 , 
+        resolution = 300,
+        compression = "lzw",
+        
+        # Circles
+        lwd = 2,
+        lty = 'blank',
+        fill = myCol,
+        
+        # Numbers
+        cex = .6,
+        fontface = "bold",
+        fontfamily = "sans",
+        
+        # Set names
+        cat.cex = 0.6,
+        cat.fontface = "bold",
+        cat.default.pos = "outer",
+        cat.pos = c(-27, 27, 135),
+        cat.dist = c(0.055, 0.055, 0.085),
+        cat.fontfamily = "sans",
+        rotation = 1
+)
+```
+
+Connect data to EC codes:
+```{r}
 if(!"dplyr" %in% installed.packages()){
   install.packages("dplyr")
 }
@@ -204,8 +255,8 @@ combined_data_all <- merge(x = combined_data12 , y = EC_terms_WikiPathways, by =
 
 #Rename the columns:
 colnames(combined_data_all) <- c("HGNC", "GO", "Reactome", "WikiPathways")
-
 ```
+
 
 Convert data to adjacency matrix:
 ```{r}
