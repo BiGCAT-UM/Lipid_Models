@@ -298,7 +298,10 @@ names(melt_data_WP_Re)[1] <- names(melt_data_GO_Re)[1]
 merged_comparison <-  do.call("rbind", list(melt_data_GO_Re, melt_data_GO_WP, melt_data_WP_Re))
 names(merged_comparison) <- c('Database1','DataBase2')
 
-##Calculate occurance (edge weight)
+#Filter out the Unclassified interactions, since these clutter the visualization:
+merged_comparison <- dplyr::filter(merged_comparison, !grepl('U', Database1))
+
+##Calculate occurrence (edge weight)
 #if(!"plyr" %in% installed.packages()){
 #  install.packages("plyr")
 #}
