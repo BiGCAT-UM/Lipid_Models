@@ -274,51 +274,42 @@ length(wikipathways_terms_new) == sum(!is.na(combined_data_noDuplicates$WikiPath
 # Sort the columns based on HGNC symbol:
 combined_data_noDuplicates <- combined_data_noDuplicates[order(combined_data_noDuplicates$HGNC),]
 
-##Labels for EC classes:
-# EC 1: Oxidoreductases
-# EC 2: Transferases
-# EC 3: Hydrolases
-# EC 4: Lyases
-# EC 5: Isomerases
-# EC 6: Ligases
-# EC 7: Translocases
-
 ##Unify the EC entries to their class name:
 # GO
 combined_data_noDuplicates <- combined_data_noDuplicates%>%mutate(GO_class = case_when(
-  startsWith(combined_data_noDuplicates$GO, '1.') ~ 'GO_1',
-  startsWith(combined_data_noDuplicates$GO, '2.') ~ 'GO_2',
-  startsWith(combined_data_noDuplicates$GO, '3.') ~ 'GO_3',
-  startsWith(combined_data_noDuplicates$GO, '4.') ~ 'GO_4',
-  startsWith(combined_data_noDuplicates$GO, '5.') ~ 'GO_5',
-  startsWith(combined_data_noDuplicates$GO, '6.') ~ 'GO_6',
-  startsWith(combined_data_noDuplicates$GO, '7.') ~ 'GO_7',
+  startsWith(combined_data_noDuplicates$GO, '1.') ~ 'G1',
+  startsWith(combined_data_noDuplicates$GO, '2.') ~ 'G2',
+  startsWith(combined_data_noDuplicates$GO, '3.') ~ 'G3',
+  startsWith(combined_data_noDuplicates$GO, '4.') ~ 'G4',
+  startsWith(combined_data_noDuplicates$GO, '5.') ~ 'G5',
+  startsWith(combined_data_noDuplicates$GO, '6.') ~ 'G6',
+  startsWith(combined_data_noDuplicates$GO, '7.') ~ 'G7',
   is.na(combined_data_noDuplicates$GO) ~ combined_data_noDuplicates$GO, 
   TRUE ~ 'GO_U'
 ))
 
 # Reactome (Re)
 combined_data_noDuplicates <- combined_data_noDuplicates%>%mutate(Re_class = case_when(
-  startsWith(combined_data_noDuplicates$Reactome, '1.') ~ 'Re_1',
-  startsWith(combined_data_noDuplicates$Reactome, '2.') ~ 'Re_2',
-  startsWith(combined_data_noDuplicates$Reactome, '3.') ~ 'Re_3',
-  startsWith(combined_data_noDuplicates$Reactome, '4.') ~ 'Re_4',
-  startsWith(combined_data_noDuplicates$Reactome, '5.') ~ 'Re_5',
-  startsWith(combined_data_noDuplicates$Reactome, '6.') ~ 'Re_6',
-  startsWith(combined_data_noDuplicates$Reactome, '7.') ~ 'Re_7',
+  startsWith(combined_data_noDuplicates$Reactome, '1.') ~ 'R1',
+  startsWith(combined_data_noDuplicates$Reactome, '2.') ~ 'R2',
+  startsWith(combined_data_noDuplicates$Reactome, '3.') ~ 'R3',
+  startsWith(combined_data_noDuplicates$Reactome, '4.') ~ 'R4',
+  startsWith(combined_data_noDuplicates$Reactome, '5.') ~ 'R5',
+  startsWith(combined_data_noDuplicates$Reactome, '6.') ~ 'R6',
+  startsWith(combined_data_noDuplicates$Reactome, '7.') ~ 'R7',
   is.na(combined_data_noDuplicates$Reactome) ~ combined_data_noDuplicates$Reactome, 
   TRUE ~ 'Re_U'
 ))
 
 # WikiPathways (WP)
 combined_data_noDuplicates <- combined_data_noDuplicates%>%mutate(WP_class = case_when(
-  startsWith(combined_data_noDuplicates$WikiPathways, '1.') ~ 'WP_1',
-  startsWith(combined_data_noDuplicates$WikiPathways, '2.') ~ 'WP_2',
-  startsWith(combined_data_noDuplicates$WikiPathways, '3.') ~ 'WP_3',
-  startsWith(combined_data_noDuplicates$WikiPathways, '4.') ~ 'WP_4',
-  startsWith(combined_data_noDuplicates$WikiPathways, '5.') ~ 'WP_5',
-  startsWith(combined_data_noDuplicates$WikiPathways, '6.') ~ 'WP_6',
-  startsWith(combined_data_noDuplicates$WikiPathways, '7.') ~ 'WP_7',
+  startsWith(combined_data_noDuplicates$WikiPathways, '1.') ~ 'W1',
+  startsWith(combined_data_noDuplicates$WikiPathways, '2.') ~ 'W2',
+  startsWith(combined_data_noDuplicates$WikiPathways, '3.') ~ 'W3',
+  startsWith(combined_data_noDuplicates$WikiPathways, '4.') ~ 'W4',
+  startsWith(combined_data_noDuplicates$WikiPathways, '5.') ~ 'W5',
+  startsWith(combined_data_noDuplicates$WikiPathways, '6.') ~ 'W6',
+  startsWith(combined_data_noDuplicates$WikiPathways, '7.') ~ 'W7',
   is.na(combined_data_noDuplicates$WikiPathways) ~ combined_data_noDuplicates$WikiPathways, 
   TRUE ~ 'WP_U'
 ))
@@ -368,20 +359,132 @@ merged_comparison <- dplyr::filter(merged_comparison, !grepl('U', Database1))
 if(!"igraph" %in% installed.packages()){
   install.packages("igraph")
 }
+suppressPackageStartupMessages(library(igraph))
 library(igraph)
 adjacencyData <- as.matrix(get.adjacency(graph.data.frame(merged_comparison)))
+
+#Order the labels of the data:
+adjacencyData_ordered_row <- adjacencyData[order(rownames(adjacencyData)),]
+adjacencyData_ordered <- adjacencyData_ordered_row[,order(colnames(adjacencyData_ordered_row))]
 
 ##Create a chord diagram to visualize overlap:
 # Charge the circlize library
 if(!"circlize" %in% installed.packages()){
   install.packages("circlize")
 }
+suppressPackageStartupMessages(library(circlize))
 library(circlize)
  
 # Make the circular plot
-chordDiagram(adjacencyData, transparency = 0.5)
+chordDiagram(adjacencyData_ordered, transparency = 0.5)
+circos.clear()
 
-##TODO: update visualization, so labels are more readable.
+```
 
+
+
+
+```{r}
+#Group the labels for WP, Reactome, GO; for better readability
+nm = unique(unlist(dimnames(adjacencyData_ordered))) #Take out all labels as individual entries
+group = structure(gsub("_\\d", "", nm), names = nm) #Check each entry against regex, remove '_(number)', to keep database name only.
+
+#Apply a color scheme for matching groups
+grid.col = structure(rep(c("#ffa600", "#ff6361", "#bc5090", "#58508d", "#003f5c", "#000000"), 3))
+
+#Visualize groups better:
+chordDiagram(adjacencyData_ordered, group = group, grid.col = grid.col, transparency = 0.5)
+circos.clear()
+
+##Add multi-group labels:
+
+#The color grid is defined manually, to show each EC class in the same color. 
+#Use circos.info() to get the order; the color can also be add without specifying the names, however, If it is has no name index, the order of grid.col is assumed to have the same order as sectors
+#sectors: "G1" "G2" "G3" "G4" "G5" "G6" "R1" "R2" "R3" "R4" "R5" "R6" "W1" "W2" "W3" "W4" "W5" "W6"
+#grid.col = c(G1 = "#ffa600", G2 = "#ff6361", G3 = "#bc5090", G4 = "#58508d", G5 = "#003f5c", G6 = "#000000",
+#    R1 = "#ffa600", R2 = "#ff6361", R3 = "#bc5090", R4 = "#58508d", R5 = "#003f5c", R6 = "#000000",
+#    W1 = "#ffa600", W2 = "#ff6361", W3 = "#bc5090", W4 = "#58508d", W5 = "#003f5c", W6 = "#000000")
+
+grid.col = structure(rep(c("#ffa600", "#ff6361", "#bc5090", "#58508d", "#003f5c", "#000000"), 3))
+
+group = structure(gsub("_\\d", "", nm), names = nm)
+chordDiagram(adjacencyData_ordered, group = group, grid.col = grid.col, transparency = 0.5,
+    annotationTrack = c("grid", "axis"),
+     annotationTrackHeight = c(0.1, 0.1),
+    preAllocateTracks = list(
+        track.height = mm_h(4),
+        track.margin = c(mm_h(4), 0)
+))
+p <- circos.track(track.index = 1, panel.fun = function(x, y) {
+    sector.index = get.cell.meta.data("sector.index")
+    xlim = get.cell.meta.data("xlim")
+    ylim = get.cell.meta.data("ylim")
+    circos.text(mean(xlim), mean(ylim), sector.index, cex = 0.5,  facing = "clockwise", niceFacing = TRUE)
+}, bg.border = NA)
+
+highlight.sector(c(paste0("R", 1:6)), track.index = 2, col = "#A8B6CC", 
+    text = "Reactome", cex = 0.6, text.col = "white", niceFacing = TRUE)
+highlight.sector(c(paste0("W", 1:6)), track.index = 2, col = "#1F449c", 
+    text = "WikiPathways", cex = 0.6, text.col = "white", niceFacing = TRUE)
+highlight.sector(c(paste0("G", 1:6)), track.index = 2, col = "#F05039", 
+    text = "Gene Ontology", cex = 0.6, text.col = "white", niceFacing = TRUE)
+
+#Add legend with EC code classification
+tab <- as.data.frame(
+  c(
+    EC_1 = "Oxidoreductases",
+    EC_2 = "Transferases",
+    EC_3 = "Hydrolases",
+    EC_4 = "Lyases",
+    EC_5 = "Isomerases",
+    EC_6 = "Translocases"
+  )
+)
+
+circos.clear()
+
+## Add legend for EC-code classification.
+##Labels for EC classes:
+# EC 1: Oxidoreductases
+# EC 2: Transferases
+# EC 3: Hydrolases
+# EC 4: Lyases
+# EC 5: Isomerases
+# EC 6: Ligases
+# EC 7: Translocases --> Not found?
+
+```
+
+```{r}
+##Save the figure in PNG file suited for paper:
+png(filename="overlap_Genes_chordDiagram.png", width = 350, height = 350, units = "px") 
+
+grid.col = structure(rep(c("#ffa600", "#ff6361", "#bc5090", "#58508d", "#003f5c", "#000000"), 3))
+group = structure(gsub("_\\d", "", nm), names = nm)
+chordDiagram(adjacencyData_ordered, group = group, grid.col = grid.col, transparency = 0.5,
+    annotationTrack = c("grid", "axis"),
+     annotationTrackHeight = c(0.1, 0.1),
+    preAllocateTracks = list(
+        track.height = mm_h(4),
+        track.margin = c(mm_h(4), 0)
+))
+circos.track(track.index = 1, panel.fun = function(x, y) {
+    sector.index = get.cell.meta.data("sector.index")
+    xlim = get.cell.meta.data("xlim")
+    ylim = get.cell.meta.data("ylim")
+    circos.text(mean(xlim), mean(ylim), sector.index, cex = 0.7,  facing = "clockwise", niceFacing = TRUE)
+}, bg.border = NA)
+highlight.sector(c(paste0("R", 1:6)), track.index = 2, col = "#A8B6CC", 
+    text = "Reactome", cex = 0.7, text.col = "white", niceFacing = TRUE)
+highlight.sector(c(paste0("W", 1:6)), track.index = 2, col = "#1F449c", 
+    text = "WikiPathways", cex = 0.7, text.col = "white", niceFacing = TRUE)
+highlight.sector(c(paste0("G", 1:6)), track.index = 2, col = "#F05039", 
+    text = "Gene Ontology", cex = 0.7, text.col = "white", niceFacing = TRUE)
+
+circos.clear()
+
+##Report unclassified, report missing translocase (nr 7).
+
+dev.off() 
 ```
 
