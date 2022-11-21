@@ -9,7 +9,25 @@ output: html_notebook
 In order to establish the potential genetic relevance of a certain modeling species in lipid metabolism, we take these steps:
 1. First, we obtain human genes from three databases (Gene Ontology, Reactome, and WikiPathways) together to establish a list of relevant proteins in lipid metabolism.
 2. Second, we compare these three databases together, while grouping on EC-nomenclature/LIPID MAPS ontology.
-3. Thirds, we use the overlapping genes to compare against other modeling species (mouse, zebrafish, yeast, worm), to represent which genes can be found in which species, and might make a suitable modeling organism.
+3. Third, we use the overlapping genes to compare against other modeling species (mouse, zebrafish, yeast, worm, etc.), to represent which genes can be found in which species, and might make a suitable modeling organism.
+
+## 0. Setup
+```{r}
+#Package manager:
+if(!requireNamespace("BiocManager", quietly = TRUE)) install.packages("BiocManager",repos = "http://cran.us.r-project.org")
+#Package for path variable
+if(!"rstudioapi" %in% installed.packages()) BiocManager::install("rstudioapi")
+#Libraries required for markdown documents:
+if(!"markdown" %in% installed.packages()){install.packages("markdown")}
+if(!"rmarkdown" %in% installed.packages()){install.packages("rmarkdown")}
+
+#load libraries
+library(rstudioapi)
+
+# set working environment to current folder
+setwd(dirname(rstudioapi::getSourceEditorContext()$path))
+```
+
 
 ## 1. Relevant proteins from Databases: 
 
@@ -20,9 +38,19 @@ III. GO terms: lipid metabolic process (GO:0006629).
 
 Data was downloaded on: 1st of August, with 5199 annotations, as a TSV file.
 ```{r}
+# Obtain Working Directory to find data
+setwd(dirname(rstudioapi::getSourceEditorContext()$path))
+getwd()
+setwd('..')
+work_DIR <- getwd()
+
 ##GO terms
-go_terms <- read.delim(file = "QuickGO-annotations-1659356807403-20220801.tsv", header = TRUE, sep = '\t')
+go_terms <- read.delim(file = "Data/QuickGO-annotations-1659356807403-20220801.tsv", header = TRUE, sep = '\t')
 go_terms_unique <- unique(go_terms$SYMBOL)
+
+# Set Working Directory back to current folder
+setwd(dirname(rstudioapi::getSourceEditorContext()$path))
+work_DIR <- getwd()
 
 ```
 
@@ -123,8 +151,19 @@ IV. Protein resources: Enzyme (EC) ID.
 
 HGNC to EC-code data was downloaded on: 1st of August, with 43295 lines, as a TSV file.
 ```{r}
+# Obtain Working Directory to find data
+setwd(dirname(rstudioapi::getSourceEditorContext()$path))
+getwd()
+setwd('..')
+work_DIR <- getwd()
+
 # Read the HGNC to EC-code file:
-EC_terms <- read.delim(file = "HGNC_biomart.txt", header = TRUE, sep = '\t', na.strings = "")
+EC_terms <- read.delim(file = "Data/HGNC_biomart.txt", header = TRUE, sep = '\t', na.strings = "")
+
+# Set Working Directory back to current folder
+setwd(dirname(rstudioapi::getSourceEditorContext()$path))
+work_DIR <- getwd()
+
 # Add 'unclassified' iso 'NA' values
 EC_terms <- replace(EC_terms, is.na(EC_terms), "unclassified")
 # Keep only relevant columns:
@@ -141,10 +180,20 @@ EC_terms_WikiPathways_not <-  setdiff(wikipathways_terms_unique, EC_terms_HGNC$A
 
 ##TODO: Map these HGNC IDs to automatically updated to new entries through BridgeDb using secondary to primary mapping.
 
+# Obtain Working Directory to find data
+setwd(dirname(rstudioapi::getSourceEditorContext()$path))
+getwd()
+setwd('..')
+work_DIR <- getwd()
+
 ## Find these HGNC symbols in the 'multi-symbol-checker' (https://www.genenames.org/tools/multi-symbol-checker/), 
 ## Manually remove the first row 'sep=', otherwise the file cannot be read in properly
 ## and read in CSV download:
-HGNC_mapping_terms <- read.csv(file = "hgnc-symbol-check.csv", header = TRUE, na.strings = "")
+HGNC_mapping_terms <- read.csv(file = "Data/hgnc-symbol-check.csv", header = TRUE, na.strings = "")
+
+# Set Working Directory back to current folder
+setwd(dirname(rstudioapi::getSourceEditorContext()$path))
+work_DIR <- getwd()
 
 #Create new array to compare changes later:
 go_terms_new <- go_terms_unique
@@ -241,6 +290,12 @@ grid.draw(figure1)
 ```
 Save Venn diagram as a Figure:
 ```{r}
+# Obtain Working Directory to find data
+setwd(dirname(rstudioapi::getSourceEditorContext()$path))
+getwd()
+setwd('..')
+work_DIR <- getwd()
+
 # Chart
 venn.diagram(
         x = list(go_terms_new, reactome_terms_new, wikipathways_terms_new),
@@ -274,6 +329,9 @@ venn.diagram(
         cat.fontfamily = "sans",
         rotation = 1
 )
+# Set Working Directory back to current folder
+setwd(dirname(rstudioapi::getSourceEditorContext()$path))
+work_DIR <- getwd()
 ```
 
 Connect data to EC codes:
@@ -481,6 +539,12 @@ circos.clear()
 
 Save chord diagram as a Figure:
 ```{r}
+# Obtain Working Directory to find data
+setwd(dirname(rstudioapi::getSourceEditorContext()$path))
+getwd()
+setwd('..')
+work_DIR <- getwd()
+
 ##Save the figure in PNG file suited for paper:
 png(filename="Figures/overlap_Genes_chordDiagram.png", width = 430, height = 280, units = "px") 
 
@@ -519,10 +583,13 @@ legend("bottomright", pch = 15, legend = names(col), col = col, title = "Enzyme 
 
 circos.clear()
 
-##Report unclassified, report missing translocase (nr 7).
-
 dev.off() 
+
+# Set Working Directory back to current folder
+setwd(dirname(rstudioapi::getSourceEditorContext()$path))
+work_DIR <- getwd()
 ```
+## 3. Model species comparison 
 
 Obtain overlapping genes between two and three databases:
 ```{r}
@@ -536,7 +603,7 @@ top4_overlap <- c(overlap[[1]], overlap[[2]], overlap[[3]], overlap[[4]])
 
 ```
 
-For these genes annotated with HGNC symbols, map to correspoding Ensembl (?) ID, to find homologos in different species.
+For these genes annotated with HGNC symbols, to find homologous in different species.
 ```{r}
 
 ```
