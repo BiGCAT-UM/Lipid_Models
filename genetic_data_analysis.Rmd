@@ -190,7 +190,7 @@ for (i in 1:nrow(HGNC_mapping_terms)) {
 
 ```
 
-Visualize overlap in Venn diagram:
+Visualize overlap in Venn diagram (to play around with the settings, before saving the Figure as a file):
 ```{r}
 if(!"VennDiagram" %in% installed.packages()){install.packages("VennDiagram")}
 if(!"RColorBrewer" %in% installed.packages()){install.packages("RColorBrewer")}
@@ -203,19 +203,19 @@ myCol <- brewer.pal(3, "Pastel2")
 futile.logger::flog.threshold(futile.logger::ERROR, name = "VennDiagramLogger")
 
 # Chart
-venn.diagram(
+figure1 <- venn.diagram(
         x = list(go_terms_new, reactome_terms_new, wikipathways_terms_new),
         category.names = c("Gene Ontology" , "Reactome" , "WikiPathways"),
-        filename = 'Overlap_GO_Re_WP.png',
+        filename = NULL, 
         output=TRUE,
         
         # Output features
         imagetype="png" ,
-        height = 650 , 
-        width = 700 , 
-        resolution = 300,
+        height = 450 , 
+        width = 300 , 
+        resolution = 500,
         compression = "lzw",
-        
+
         # Circles
         lwd = 2,
         lty = 'blank',
@@ -228,6 +228,45 @@ venn.diagram(
         
         # Set names
         cat.cex = 0.6,
+        cat.fontface = "bold",
+        cat.default.pos = "outer",
+        cat.pos = c(-27, 27, 135),
+        cat.dist = c(0.055, 0.055, 0.085),
+        cat.fontfamily = "sans",
+        rotation = 1
+)
+grid.newpage()
+grid.draw(figure1)
+
+```
+Save Venn diagram as a Figure:
+```{r}
+# Chart
+venn.diagram(
+        x = list(go_terms_new, reactome_terms_new, wikipathways_terms_new),
+        category.names = c(" Gene Ontology" , "Reactome" , "WikiPathways"),
+        filename = 'Figures/Overlap_GO_Re_WP.png',
+        output=TRUE,
+        
+        # Output features
+        imagetype="png" ,
+        height = 250 , 
+        width = 250 , 
+        resolution = 300,
+        compression = "lzw",
+        
+        # Circles
+        lwd = 2,
+        lty = 'blank',
+        fill = myCol,
+        
+        # Numbers
+        cex = .4,
+        fontface = "bold",
+        fontfamily = "sans",
+        
+        # Set names
+        cat.cex = 0.22,
         cat.fontface = "bold",
         cat.default.pos = "outer",
         cat.pos = c(-27, 27, 135),
@@ -256,7 +295,6 @@ combined_data_all <- merge(x = combined_data12 , y = EC_terms_WikiPathways, by =
 #Rename the columns:
 colnames(combined_data_all) <- c("HGNC", "GO", "Reactome", "WikiPathways")
 ```
-
 
 Convert data to adjacency matrix:
 ```{r}
@@ -381,6 +419,7 @@ circos.clear()
 
 ```
 
+Update the visualization by grouping the data per database, and using the same colors from the Venn Diagram (to play around with the settings, before saving the Figure as a file):
 ```{r}
 #Group the labels for WP, Reactome, GO; for better readability
 nm = unique(unlist(dimnames(adjacencyData_ordered))) #Take out all labels as individual entries
@@ -419,20 +458,20 @@ p <- circos.track(track.index = 1, panel.fun = function(x, y) {
     circos.text(mean(xlim), mean(ylim), sector.index, cex = 0.5,  facing = "clockwise", niceFacing = TRUE)
 }, bg.border = NA)
 
-highlight.sector(c(paste0("R", 1:6)), track.index = 2, col = "#FDCDAC", 
+highlight.sector(c(paste0("R", 1:6)), track.index = 2, col = myCol[2], 
     text = "Reactome", cex = 0.7, text.col = "white", niceFacing = TRUE)
-highlight.sector(c(paste0("W", 1:6)), track.index = 2, col = "#CBD5E8", 
+highlight.sector(c(paste0("W", 1:6)), track.index = 2, col =  myCol[3], 
     text = "WikiPathways", cex = 0.7, text.col = "white", niceFacing = TRUE)
-highlight.sector(c(paste0("G", 1:6)), track.index = 2, col = "#B3E2CD", 
+highlight.sector(c(paste0("G", 1:6)), track.index = 2, col = myCol[1], 
     text = "Gene Ontology", cex = 0.7, text.col = "white", niceFacing = TRUE)
 
-#Add legend with EC code classification
-col = c("1: Oxidoreductase" = "#ffa600",
-        "2: Transferases" = "#ff6361",
-        "3: Hydrolases" = "#bc5090",
-        "4: Lyases" = "#58508d",
-        "5: Isomerases" = "#003f5c",
-        "6: Ligase" = "#000000") # EC 7: Translocases --> Not found.
+#Add legend with EC code classification, reusing the colors for the diagram as defined above by the parameter "grid.col".
+col = c("1: Oxidoreductase" = grid.col[1],
+        "2: Transferases" = grid.col[2],
+        "3: Hydrolases" = grid.col[3],
+        "4: Lyases" = grid.col[4],
+        "5: Isomerases" = grid.col[5],
+        "6: Ligase" = grid.col[6]) # EC 7: Translocases --> Not found.
 
 legend("bottomright", pch = 15, legend = names(col), col = col, title = "Enzyme Classification", cex = 0.8) 
 
@@ -440,9 +479,10 @@ circos.clear()
 
 ```
 
+Save chord diagram as a Figure:
 ```{r}
 ##Save the figure in PNG file suited for paper:
-png(filename="overlap_Genes_chordDiagram.png", width = 430, height = 280, units = "px") 
+png(filename="Figures/overlap_Genes_chordDiagram.png", width = 430, height = 280, units = "px") 
 
 grid.col = structure(rep(c("#ffa600", "#ff6361", "#bc5090", "#58508d", "#003f5c", "#000000"), 3))
 group = structure(gsub("_\\d", "", nm), names = nm)
@@ -460,20 +500,20 @@ circos.track(track.index = 1, panel.fun = function(x, y) {
     circos.text(mean(xlim), mean(ylim), sector.index, cex = 0.7,  facing = "clockwise", niceFacing = TRUE)
 }, bg.border = NA)
 
-highlight.sector(c(paste0("R", 1:6)), track.index = 2, col = "#FDCDAC", 
+highlight.sector(c(paste0("R", 1:6)), track.index = 2, col = myCol[2], 
     text = "Reactome", cex = 0.7, text.col = "white", niceFacing = TRUE)
-highlight.sector(c(paste0("W", 1:6)), track.index = 2, col = "#CBD5E8", 
+highlight.sector(c(paste0("W", 1:6)), track.index = 2, col =  myCol[3], 
     text = "WikiPathways", cex = 0.7, text.col = "white", niceFacing = TRUE)
-highlight.sector(c(paste0("G", 1:6)), track.index = 2, col = "#B3E2CD", 
+highlight.sector(c(paste0("G", 1:6)), track.index = 2, col = myCol[1], 
     text = "Gene Ontology", cex = 0.7, text.col = "white", niceFacing = TRUE)
 
-#Add legend with EC code classification
-col = c("1: Oxidoreductase" = "#ffa600",
-        "2: Transferases" = "#ff6361",
-        "3: Hydrolases" = "#bc5090",
-        "4: Lyases" = "#58508d",
-        "5: Isomerases" = "#003f5c",
-        "6: Ligases" = "#000000") # EC 7: Translocases --> Not found.
+#Add legend with EC code classification, reusing the colors for the diagram as defined above by the parameter "grid.col".
+col = c("1: Oxidoreductase" = grid.col[1],
+        "2: Transferases" = grid.col[2],
+        "3: Hydrolases" = grid.col[3],
+        "4: Lyases" = grid.col[4],
+        "5: Isomerases" = grid.col[5],
+        "6: Ligase" = grid.col[6]) # EC 7: Translocases --> Not found.
 
 legend("bottomright", pch = 15, legend = names(col), col = col, title = "Enzyme Classification", cex = 0.7) 
 
@@ -482,5 +522,22 @@ circos.clear()
 ##Report unclassified, report missing translocase (nr 7).
 
 dev.off() 
+```
+
+Obtain overlapping genes between two and three databases:
+```{r}
+#Calculate the overlap
+overlap <- calculate.overlap(
+  x = list(go_terms_new, reactome_terms_new, wikipathways_terms_new)
+)
+
+#The first four values in the list (in the case of comparing 3 databases) are relevant to keep.
+top4_overlap <- c(overlap[[1]], overlap[[2]], overlap[[3]], overlap[[4]])
+
+```
+
+For these genes annotated with HGNC symbols, map to correspoding Ensembl (?) ID, to find homologos in different species.
+```{r}
+
 ```
 
