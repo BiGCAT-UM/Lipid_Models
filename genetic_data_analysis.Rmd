@@ -381,9 +381,6 @@ circos.clear()
 
 ```
 
-
-
-
 ```{r}
 #Group the labels for WP, Reactome, GO; for better readability
 nm = unique(unlist(dimnames(adjacencyData_ordered))) #Take out all labels as individual entries
@@ -398,7 +395,7 @@ circos.clear()
 
 ##Add multi-group labels:
 
-#The color grid is defined manually, to show each EC class in the same color. 
+#The color grid can also be defined manually, to show each EC class in the same color. 
 #Use circos.info() to get the order; the color can also be add without specifying the names, however, If it is has no name index, the order of grid.col is assumed to have the same order as sectors
 #sectors: "G1" "G2" "G3" "G4" "G5" "G6" "R1" "R2" "R3" "R4" "R5" "R6" "W1" "W2" "W3" "W4" "W5" "W6"
 #grid.col = c(G1 = "#ffa600", G2 = "#ff6361", G3 = "#bc5090", G4 = "#58508d", G5 = "#003f5c", G6 = "#000000",
@@ -422,42 +419,30 @@ p <- circos.track(track.index = 1, panel.fun = function(x, y) {
     circos.text(mean(xlim), mean(ylim), sector.index, cex = 0.5,  facing = "clockwise", niceFacing = TRUE)
 }, bg.border = NA)
 
-highlight.sector(c(paste0("R", 1:6)), track.index = 2, col = "#A8B6CC", 
-    text = "Reactome", cex = 0.6, text.col = "white", niceFacing = TRUE)
-highlight.sector(c(paste0("W", 1:6)), track.index = 2, col = "#1F449c", 
-    text = "WikiPathways", cex = 0.6, text.col = "white", niceFacing = TRUE)
-highlight.sector(c(paste0("G", 1:6)), track.index = 2, col = "#F05039", 
-    text = "Gene Ontology", cex = 0.6, text.col = "white", niceFacing = TRUE)
+highlight.sector(c(paste0("R", 1:6)), track.index = 2, col = "#FDCDAC", 
+    text = "Reactome", cex = 0.7, text.col = "white", niceFacing = TRUE)
+highlight.sector(c(paste0("W", 1:6)), track.index = 2, col = "#CBD5E8", 
+    text = "WikiPathways", cex = 0.7, text.col = "white", niceFacing = TRUE)
+highlight.sector(c(paste0("G", 1:6)), track.index = 2, col = "#B3E2CD", 
+    text = "Gene Ontology", cex = 0.7, text.col = "white", niceFacing = TRUE)
 
 #Add legend with EC code classification
-tab <- as.data.frame(
-  c(
-    EC_1 = "Oxidoreductases",
-    EC_2 = "Transferases",
-    EC_3 = "Hydrolases",
-    EC_4 = "Lyases",
-    EC_5 = "Isomerases",
-    EC_6 = "Translocases"
-  )
-)
+col = c("1: Oxidoreductase" = "#ffa600",
+        "2: Transferases" = "#ff6361",
+        "3: Hydrolases" = "#bc5090",
+        "4: Lyases" = "#58508d",
+        "5: Isomerases" = "#003f5c",
+        "6: Ligase" = "#000000") # EC 7: Translocases --> Not found.
+
+legend("bottomright", pch = 15, legend = names(col), col = col, title = "Enzyme Classification", cex = 0.8) 
 
 circos.clear()
-
-## Add legend for EC-code classification.
-##Labels for EC classes:
-# EC 1: Oxidoreductases
-# EC 2: Transferases
-# EC 3: Hydrolases
-# EC 4: Lyases
-# EC 5: Isomerases
-# EC 6: Ligases
-# EC 7: Translocases --> Not found?
 
 ```
 
 ```{r}
 ##Save the figure in PNG file suited for paper:
-png(filename="overlap_Genes_chordDiagram.png", width = 350, height = 350, units = "px") 
+png(filename="overlap_Genes_chordDiagram.png", width = 430, height = 280, units = "px") 
 
 grid.col = structure(rep(c("#ffa600", "#ff6361", "#bc5090", "#58508d", "#003f5c", "#000000"), 3))
 group = structure(gsub("_\\d", "", nm), names = nm)
@@ -474,12 +459,23 @@ circos.track(track.index = 1, panel.fun = function(x, y) {
     ylim = get.cell.meta.data("ylim")
     circos.text(mean(xlim), mean(ylim), sector.index, cex = 0.7,  facing = "clockwise", niceFacing = TRUE)
 }, bg.border = NA)
-highlight.sector(c(paste0("R", 1:6)), track.index = 2, col = "#A8B6CC", 
+
+highlight.sector(c(paste0("R", 1:6)), track.index = 2, col = "#FDCDAC", 
     text = "Reactome", cex = 0.7, text.col = "white", niceFacing = TRUE)
-highlight.sector(c(paste0("W", 1:6)), track.index = 2, col = "#1F449c", 
+highlight.sector(c(paste0("W", 1:6)), track.index = 2, col = "#CBD5E8", 
     text = "WikiPathways", cex = 0.7, text.col = "white", niceFacing = TRUE)
-highlight.sector(c(paste0("G", 1:6)), track.index = 2, col = "#F05039", 
+highlight.sector(c(paste0("G", 1:6)), track.index = 2, col = "#B3E2CD", 
     text = "Gene Ontology", cex = 0.7, text.col = "white", niceFacing = TRUE)
+
+#Add legend with EC code classification
+col = c("1: Oxidoreductase" = "#ffa600",
+        "2: Transferases" = "#ff6361",
+        "3: Hydrolases" = "#bc5090",
+        "4: Lyases" = "#58508d",
+        "5: Isomerases" = "#003f5c",
+        "6: Ligases" = "#000000") # EC 7: Translocases --> Not found.
+
+legend("bottomright", pch = 15, legend = names(col), col = col, title = "Enzyme Classification", cex = 0.7) 
 
 circos.clear()
 
