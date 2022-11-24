@@ -452,9 +452,7 @@ merged_comparison <- dplyr::filter(merged_comparison, !grepl('U', Database1))
 #  t %>% c %>% unique
 
 ##Use the igraph library to calculate the adjacency matrix:
-if(!"igraph" %in% installed.packages()){
-  install.packages("igraph")
-}
+if(!"igraph" %in% installed.packages()){install.packages("igraph")}
 suppressPackageStartupMessages(library(igraph))
 library(igraph)
 adjacencyData <- as.matrix(get.adjacency(graph.data.frame(merged_comparison)))
@@ -465,9 +463,7 @@ adjacencyData_ordered <- adjacencyData_ordered_row[,order(colnames(adjacencyData
 
 ##Create a chord diagram to visualize overlap:
 # Charge the circlize library
-if(!"circlize" %in% installed.packages()){
-  install.packages("circlize")
-}
+if(!"circlize" %in% installed.packages()){install.packages("circlize")}
 suppressPackageStartupMessages(library(circlize))
 library(circlize)
  
@@ -603,8 +599,26 @@ top4_overlap <- c(overlap[[1]], overlap[[2]], overlap[[3]], overlap[[4]])
 
 ```
 
-For these genes annotated with HGNC symbols, to find homologous in different species.
+For these genes annotated with HGNC symbols, find homologous in different species.
+(see https://shiring.github.io/genome/2016/12/11/homologous_genes_post for inspiration.)
 ```{r}
+if(!"biomaRt" %in% installed.packages()){install.packages("biomaRt")}
+suppressPackageStartupMessages(library(biomaRt))
+library(biomaRt)
+
+ensembl = useMart("ensembl")
+datasets <- listDatasets(ensembl)
+
+#Subset relevant for this paper:
+#Saccharomyces cerevisiae, Neurosporea crassa (not part of Ensembl download), Aspergillus nidulans(not part of Ensembl download), Caenorhabditis elegans, Drosophila melanogaster, Mus musculus, Arabidopsis thaliananot part of Ensembl download).
+speciesPaper <- c("celegans_gene_ensembl", "dmelanogaster_gene_ensembl", "mmusculus_gene_ensembl")
+
+human.mart <- biomaRt::useMart(host="https://dec2021.archive.ensembl.org", "ENSEMBL_MART_ENSEMBL", dataset="hsapiens_gene_ensembl")
+mouse.mart <- biomaRt::useMart(host="https://dec2021.archive.ensembl.org", "ENSEMBL_MART_ENSEMBL", dataset="mmusculus_gene_ensembl")
+
+human2mouseLipids.df <- biomaRt::getLDS(attributes=c("external_gene_name","ensembl_gene_id"),filters=c("external_gene_name"),values=top4_overlap,mart=human.mart,attributesL=c("external_gene_name","ensembl_gene_id"),martL=mouse.mart)
+
+
 
 ```
 
