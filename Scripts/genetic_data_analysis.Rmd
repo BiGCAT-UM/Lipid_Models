@@ -629,21 +629,70 @@ Merge IDs where more then one mapping were found in one dataframe:
 lipidGenes <- data.frame(top4_overlap)
 colnames(lipidGenes) <- "Gene.name"
 
+## Add EC codes to dataframe
+#colnames(EC_terms_HGNC) <- c("Gene.name", "EC")
+##Merge EC code to dataframe
+#lipidGenes <- left_join(lipidGenes, EC_terms_HGNC, by = "Gene.name")
+
 #Count the occurence of each human gene name in the hmology data, to find 1-to-many-mappings.
-mouse.occurence <- human2mouseLipids.df %>% count(Gene.name) 
-celegans.occurence <- human2celegansLipids.df %>% count(Gene.name) 
-dmelanogaster.occurence <- human2dmelanogasterLipids.df %>% count(Gene.name) 
+mouse.occurrence <- human2mouseLipids.df %>% count(Gene.name) 
+celegans.occurrence <- human2celegansLipids.df %>% count(Gene.name) 
+dmelanogaster.occurrence <- human2dmelanogasterLipids.df %>% count(Gene.name) 
 
 #Merge the data in one dataframe:
-lipidGenes <- left_join(lipidGenes, mouse.occurence, by = "Gene.name") %>%
-                left_join(., celegans.occurence, by='Gene.name') %>%
-                left_join(., dmelanogaster.occurence, by='Gene.name')
-colnames(lipidGenes) <- c("Gene.name", "mouse.occurence", "celegans.occurence", "dmelanogaster.occurence")
+lipidGenes <- left_join(lipidGenes, mouse.occurrence, by = "Gene.name") %>%
+                left_join(., celegans.occurrence, by='Gene.name') %>%
+                left_join(., dmelanogaster.occurrence, by='Gene.name')
+colnames(lipidGenes) <- c("Gene.name", "mouse.occurrence", "celegans.occurrence", "dmelanogaster.occurrence")
 
+# Update dataframe to
+#lipidGenes <- lipidGenes%>%mutate(EC_class = case_when(
+#  startsWith(lipidGenes$EC, '1.') ~ 'EC1',
+#  startsWith(lipidGenes$EC, '2.') ~ 'EC2',
+#  startsWith(lipidGenes$EC, '3.') ~ 'EC3',
+#  startsWith(lipidGenes$EC, '4.') ~ 'EC4',
+#  startsWith(lipidGenes$EC, '5.') ~ 'EC5',
+#  startsWith(lipidGenes$EC, '6.') ~ 'EC6',
+#  startsWith(lipidGenes$EC, '7.') ~ 'EC7',
+#  is.na(lipidGenes$EC) ~  lipidGenes$EC, #NA,
+#  TRUE ~ 'Unclassified'
+#))
+
+##Clear up irrelevant data to free up memory in workspace:
+#rm(list=setdiff(ls(), "lipidGenes"))
 ```
 
 Visualize the homology mapped data
 ```{r}
+##Transpose data for visualization:
+##Count nr of genes with NA(=0), 1, 2, 3... mappings; color is species  
+highestOccurence.mouse <- max(lipidGenes$mouse.occurence, na.rm = TRUE)
+missingOccurence.mouse <- sum(is.na(lipidGenes$mouse.occurence))
+highestOccurence.celegans <- max(lipidGenes$celegans.occurence, na.rm = TRUE)
+missingOccurence.celegans <- sum(is.na(lipidGenes$celegans.occurence))
+highestOccurence.dmelanogaster <- max(lipidGenes$dmelanogaster.occurence, na.rm = TRUE)
+missingOccurence.dmelanogaster <- sum(is.na(lipidGenes$dmelanogaster.occurence))
+
+##Create summary of occurence for whole gene list, and add column with species name
+occurrence.Mouse.Summary <- data.frame(table(lipidGenes$mouse.occurrence))
+occurrence.Mouse.Summary$species <- "mouse"
+
+occurrence.celegans.Summary <- data.frame(table(lipidGenes$celegans.occurrence))
+occurrence.celegans.Summary$species <- "celegans"
+
+occurrence.dmelanogaster.Summary <- data.frame(table(lipidGenes$dmelanogaster.occurrence))
+occurrence.dmelanogaster.Summary$species <- "dmelanogaster"
+
+#Merge the data in one dataframe:
+Data_overview <- bind_rows(occurrence.Mouse.Summary, occurrence.celegans.Summary, occurrence.dmelanogaster.Summary) %>% arrange(Var1)
+colnames(Data_overview) <- c("Mappings", "Occurrence", "species")
+
+library(ggplot2)
+
+# A basic scatterplot with color depending on Species
+ggplot(Data_overview, aes(x = Mappings, y = Occurrence, color = species)) + 
+    geom_point(size=6) #+
+    #theme_ipsum()
 
 ```
 
