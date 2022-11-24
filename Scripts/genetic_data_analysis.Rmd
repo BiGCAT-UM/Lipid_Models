@@ -600,25 +600,50 @@ top4_overlap <- c(overlap[[1]], overlap[[2]], overlap[[3]], overlap[[4]])
 ```
 
 For these genes annotated with HGNC symbols, find homologous in different species.
-(see https://shiring.github.io/genome/2016/12/11/homologous_genes_post for inspiration.)
+(see https://shiring.github.io/genome/2016/12/11/homologous_genes_post for inspiration; note that this script is from 2016 and several function do not work directly anymore, e.g. the getLDS function requires a archived (older) version of Ensembl, see https://support.bioconductor.org/p/9143401/#9143687.)
 ```{r}
 if(!"biomaRt" %in% installed.packages()){install.packages("biomaRt")}
 suppressPackageStartupMessages(library(biomaRt))
 library(biomaRt)
 
-ensembl = useMart("ensembl")
-datasets <- listDatasets(ensembl)
-
 #Subset relevant for this paper:
 #Saccharomyces cerevisiae, Neurosporea crassa (not part of Ensembl download), Aspergillus nidulans(not part of Ensembl download), Caenorhabditis elegans, Drosophila melanogaster, Mus musculus, Arabidopsis thaliananot part of Ensembl download).
-speciesPaper <- c("celegans_gene_ensembl", "dmelanogaster_gene_ensembl", "mmusculus_gene_ensembl")
+speciesPaper <- c("hsapiens_gene_ensembl", "celegans_gene_ensembl", "dmelanogaster_gene_ensembl", "mmusculus_gene_ensembl")
 
-human.mart <- biomaRt::useMart(host="https://dec2021.archive.ensembl.org", "ENSEMBL_MART_ENSEMBL", dataset="hsapiens_gene_ensembl")
-mouse.mart <- biomaRt::useMart(host="https://dec2021.archive.ensembl.org", "ENSEMBL_MART_ENSEMBL", dataset="mmusculus_gene_ensembl")
+human.mart <- biomaRt::useMart(host="https://dec2021.archive.ensembl.org", "ENSEMBL_MART_ENSEMBL", dataset=speciesPaper[1])
+celegans.mart <- biomaRt::useMart(host="https://dec2021.archive.ensembl.org", "ENSEMBL_MART_ENSEMBL", dataset=speciesPaper[2])
+dmelanogaster.mart <- biomaRt::useMart(host="https://dec2021.archive.ensembl.org", "ENSEMBL_MART_ENSEMBL", dataset=speciesPaper[3])
+mouse.mart <- biomaRt::useMart(host="https://dec2021.archive.ensembl.org", "ENSEMBL_MART_ENSEMBL", dataset=speciesPaper[4])
+
+human2celegansLipids.df <- biomaRt::getLDS(attributes=c("external_gene_name","ensembl_gene_id"),filters=c("external_gene_name"),values=top4_overlap,mart=human.mart,attributesL=c("external_gene_name","ensembl_gene_id"),martL=celegans.mart)
+
+human2dmelanogasterLipids.df <- biomaRt::getLDS(attributes=c("external_gene_name","ensembl_gene_id"),filters=c("external_gene_name"),values=top4_overlap,mart=human.mart,attributesL=c("external_gene_name","ensembl_gene_id"),martL=dmelanogaster.mart)
 
 human2mouseLipids.df <- biomaRt::getLDS(attributes=c("external_gene_name","ensembl_gene_id"),filters=c("external_gene_name"),values=top4_overlap,mart=human.mart,attributesL=c("external_gene_name","ensembl_gene_id"),martL=mouse.mart)
 
+```
 
+Merge IDs where more then one mapping were found in one dataframe:
+```{r}
+#Create a dataframe with all gene names:
+lipidGenes <- data.frame(top4_overlap)
+colnames(lipidGenes) <- "Gene.name"
+
+#Count the occurence of each human gene name in the hmology data, to find 1-to-many-mappings.
+mouse.occurence <- human2mouseLipids.df %>% count(Gene.name) 
+celegans.occurence <- human2celegansLipids.df %>% count(Gene.name) 
+dmelanogaster.occurence <- human2dmelanogasterLipids.df %>% count(Gene.name) 
+
+#Merge the data in one dataframe:
+lipidGenes <- left_join(lipidGenes, mouse.occurence, by = "Gene.name") %>%
+                left_join(., celegans.occurence, by='Gene.name') %>%
+                left_join(., dmelanogaster.occurence, by='Gene.name')
+colnames(lipidGenes) <- c("Gene.name", "mouse.occurence", "celegans.occurence", "dmelanogaster.occurence")
+
+```
+
+Visualize the homology mapped data
+```{r}
 
 ```
 
