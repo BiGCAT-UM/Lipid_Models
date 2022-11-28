@@ -606,20 +606,27 @@ if(!"biomaRt" %in% installed.packages()){install.packages("biomaRt")}
 suppressPackageStartupMessages(library(biomaRt))
 library(biomaRt)
 
+#Find names for available species in Ensembl:
+ensembl =  biomaRt::useMart("ensembl")
+datasets <- listDatasets(ensembl)
+
 #Subset relevant for this paper:
 #Saccharomyces cerevisiae, Neurosporea crassa (not part of Ensembl download), Aspergillus nidulans(not part of Ensembl download), Caenorhabditis elegans, Drosophila melanogaster, Mus musculus, Arabidopsis thaliananot part of Ensembl download).
-speciesPaper <- c("hsapiens_gene_ensembl", "celegans_gene_ensembl", "dmelanogaster_gene_ensembl", "mmusculus_gene_ensembl")
+speciesPaper <- c("hsapiens_gene_ensembl", "celegans_gene_ensembl", "dmelanogaster_gene_ensembl", "mmusculus_gene_ensembl", "scerevisiae_gene_ensembl")
 
 human.mart <- biomaRt::useMart(host="https://dec2021.archive.ensembl.org", "ENSEMBL_MART_ENSEMBL", dataset=speciesPaper[1])
 celegans.mart <- biomaRt::useMart(host="https://dec2021.archive.ensembl.org", "ENSEMBL_MART_ENSEMBL", dataset=speciesPaper[2])
 dmelanogaster.mart <- biomaRt::useMart(host="https://dec2021.archive.ensembl.org", "ENSEMBL_MART_ENSEMBL", dataset=speciesPaper[3])
 mouse.mart <- biomaRt::useMart(host="https://dec2021.archive.ensembl.org", "ENSEMBL_MART_ENSEMBL", dataset=speciesPaper[4])
+scerevisiae.mart <- biomaRt::useMart(host="https://dec2021.archive.ensembl.org", "ENSEMBL_MART_ENSEMBL", dataset=speciesPaper[5])
 
 human2celegansLipids.df <- biomaRt::getLDS(attributes=c("external_gene_name","ensembl_gene_id"),filters=c("external_gene_name"),values=top4_overlap,mart=human.mart,attributesL=c("external_gene_name","ensembl_gene_id"),martL=celegans.mart)
 
 human2dmelanogasterLipids.df <- biomaRt::getLDS(attributes=c("external_gene_name","ensembl_gene_id"),filters=c("external_gene_name"),values=top4_overlap,mart=human.mart,attributesL=c("external_gene_name","ensembl_gene_id"),martL=dmelanogaster.mart)
 
 human2mouseLipids.df <- biomaRt::getLDS(attributes=c("external_gene_name","ensembl_gene_id"),filters=c("external_gene_name"),values=top4_overlap,mart=human.mart,attributesL=c("external_gene_name","ensembl_gene_id"),martL=mouse.mart)
+
+human2scerevisiaeLipids.df <- biomaRt::getLDS(attributes=c("external_gene_name","ensembl_gene_id"),filters=c("external_gene_name"),values=top4_overlap,mart=human.mart,attributesL=c("external_gene_name","ensembl_gene_id"),martL=scerevisiae.mart)
 
 ```
 
@@ -629,21 +636,147 @@ Merge IDs where more then one mapping were found in one dataframe:
 lipidGenes <- data.frame(top4_overlap)
 colnames(lipidGenes) <- "Gene.name"
 
-## Add EC codes to dataframe
-#colnames(EC_terms_HGNC) <- c("Gene.name", "EC")
-##Merge EC code to dataframe
-#lipidGenes <- left_join(lipidGenes, EC_terms_HGNC, by = "Gene.name")
-
 #Count the occurence of each human gene name in the hmology data, to find 1-to-many-mappings.
 mouse.occurrence <- human2mouseLipids.df %>% count(Gene.name) 
 celegans.occurrence <- human2celegansLipids.df %>% count(Gene.name) 
 dmelanogaster.occurrence <- human2dmelanogasterLipids.df %>% count(Gene.name) 
+scerevisiae.occurrence  <- human2scerevisiaeLipids.df %>% count(Gene.name) 
 
 #Merge the data in one dataframe:
 lipidGenes <- left_join(lipidGenes, mouse.occurrence, by = "Gene.name") %>%
-                left_join(., celegans.occurrence, by='Gene.name') %>%
-                left_join(., dmelanogaster.occurrence, by='Gene.name')
-colnames(lipidGenes) <- c("Gene.name", "mouse.occurrence", "celegans.occurrence", "dmelanogaster.occurrence")
+              left_join(., celegans.occurrence, by='Gene.name') %>%
+              left_join(., dmelanogaster.occurrence, by='Gene.name') %>% 
+              left_join(., scerevisiae.occurrence, by='Gene.name') %>% 
+                mutate_each(funs(replace(., which(is.na(.)), 0)))
+colnames(lipidGenes) <- c("Gene.name", "mouse.occurrence", "celegans.occurrence", "dmelanogaster.occurrence", "scerevisiae.occurrence")
+
+##Clear up irrelevant data to free up memory in workspace:
+#rm(list=setdiff(ls(), c("lipidGenes", "top4_overlap")))
+```
+
+Visualize the homology mapped data
+```{r}
+##Create summary of occurrence for whole gene list, and add column with species name
+occurrence.Mouse.Summary <- data.frame(table(lipidGenes$mouse.occurrence))
+occurrence.Mouse.Summary$species <- "mouse"
+
+occurrence.celegans.Summary <- data.frame(table(lipidGenes$celegans.occurrence))
+occurrence.celegans.Summary$species <- "celegans"
+
+occurrence.dmelanogaster.Summary <- data.frame(table(lipidGenes$dmelanogaster.occurrence))
+occurrence.dmelanogaster.Summary$species <- "dmelanogaster"
+
+occurrence.scerevisiae.Summary <- data.frame(table(lipidGenes$scerevisiae.occurrence))
+occurrence.scerevisiae.Summary$species <- "scerevisiae"
+
+#Merge the data in one dataframe:
+Data_overview <- bind_rows(occurrence.Mouse.Summary, occurrence.celegans.Summary, occurrence.dmelanogaster.Summary, occurrence.scerevisiae.Summary) %>% arrange(Var1)
+colnames(Data_overview) <- c("Mappings", "Occurrence", "species")
+
+#Count Missing IDs:
+missingOccurrence.mouse <- filter(Data_overview, Mappings==0 & species%in% ("mouse"))
+missingOccurrence.celegans <- filter(Data_overview, Mappings==0 & species%in% ("celegans"))
+missingOccurrence.dmelanogaster <- filter(Data_overview, Mappings==0 & species%in% ("dmelanogaster"))
+missingOccurrence.scerevisiae <- filter(Data_overview, Mappings==0 & species%in% ("scerevisiae"))
+
+##Summarize Missing mappings (NA) for these species:
+paste0("No mappings were found for ", missingOccurrence.mouse[2], " M. musculus genes (", round((missingOccurrence.mouse[2]/length(top4_overlap)*100), digits = 1), "% of the total gene list), ",
+       missingOccurrence.celegans[2], " C. elegans genes (" , round((missingOccurrence.celegans[2]/length(top4_overlap)*100), digits = 1), "%), ",
+       missingOccurrence.dmelanogaster[2], " D. melanogaster genes (" , round((missingOccurrence.dmelanogaster[2]/length(top4_overlap)*100), digits = 1), "%), and ",
+       missingOccurrence.scerevisiae[2], " S. cerevisiae genes (" , round((missingOccurrence.scerevisiae[2]/length(top4_overlap)*100), digits = 1), "%)."
+       )
+
+#Count 1-to-1 mappings:
+one_Occurrence.mouse <- filter(Data_overview, Mappings==1 & species%in% ("mouse"))
+one_Occurrence.celegans <- filter(Data_overview, Mappings==1 & species%in% ("celegans"))
+one_Occurrence.dmelanogaster <- filter(Data_overview, Mappings==1 & species%in% ("dmelanogaster"))
+one_Occurrence.scerevisiae <- filter(Data_overview, Mappings==1 & species%in% ("scerevisiae"))
+
+##Summarize 1-to-1 mappings for these species:
+paste0("One-to-one mappings were found for ", one_Occurrence.mouse[2], " M. musculus genes (", round((one_Occurrence.mouse[2]/length(top4_overlap)*100), digits = 1), "% of the total gene list), ",
+       one_Occurrence.celegans[2], " C. elegans genes (" , round((one_Occurrence.celegans[2]/length(top4_overlap)*100), digits = 1), "%), ",
+       one_Occurrence.dmelanogaster[2], " D. melanogaster genes (" , round((one_Occurrence.dmelanogaster[2]/length(top4_overlap)*100), digits = 1), "%), and ",
+       one_Occurrence.scerevisiae[2], " S. cerevisiae genes (" , round((one_Occurrence.scerevisiae[2]/length(top4_overlap)*100), digits = 1), "%)."
+       )
+
+##Remove occurrence 1 for better visualization of other data:
+#Data_overview$Mappings <- as.numeric(Data_overview$Mappings)
+More_mappings <- filter(Data_overview, Mappings != 1 & Mappings != 0 )
+More_mappings$Mappings <- as.numeric(as.character(More_mappings$Mappings))
+More_mappings <- More_mappings[order(More_mappings$Mappings),]
+##Below should lead to the same results as above two lines, but is showing to be inconsitent...
+#More_mappings <- More_mappings[order(as.numeric(as.character(More_mappings$Mappings))),]
+
+##Count total 1-to-many mappings:
+many_Occurrence.mouse <- filter(More_mappings, species%in% ("mouse"))
+many_Occurrence.celegans <- filter(More_mappings, species%in% ("celegans"))
+many_Occurrence.dmelanogaster <- filter(More_mappings, species%in% ("dmelanogaster"))
+many_Occurrence.scerevisiae <- filter(More_mappings, species%in% ("scerevisiae"))
+
+##Summarize 1-to-many mappings for these species:
+paste0("One-to-many mappings were found for ", sum(many_Occurrence.mouse$Occurrence), " M. musculus genes (", round((sum(many_Occurrence.mouse$Occurrence)/length(top4_overlap)*100), digits = 1), "% of the total gene list), ",
+      sum(many_Occurrence.celegans$Occurrence), " C. elegans genes (" , round((sum(many_Occurrence.celegans$Occurrence)/length(top4_overlap)*100), digits = 1), "%) ",
+      sum(many_Occurrence.dmelanogaster$Occurrence), " D. melanogaster genes (" , round((sum(many_Occurrence.dmelanogaster$Occurrence)/length(top4_overlap)*100), digits = 1), "%), and ",
+      sum(many_Occurrence.scerevisiae$Occurrence), " S. cerevisiae genes (" , round((sum(many_Occurrence.scerevisiae$Occurrence)/length(top4_overlap)*100), digits = 1), "%)."
+       )
+
+#Download and install the relevant packages:
+if(!"ggplot2" %in% installed.packages()){install.packages("ggplot2")}
+suppressPackageStartupMessages(library(ggplot2))
+library(ggplot2)
+if(!"hrbrthemes" %in% installed.packages()){install.packages("hrbrthemes")}
+suppressPackageStartupMessages(library(hrbrthemes))
+library(hrbrthemes)
+if(!"ggbreak" %in% installed.packages()){install.packages("ggbreak")}
+suppressPackageStartupMessages(library(ggbreak))
+library(ggbreak)
+
+# A scatterplot with color depending on Species
+ggplot(More_mappings, aes(x = Mappings, y = Occurrence, color = species, shape=species, size=species)) + 
+    geom_point(size=3) +
+    theme_ipsum() + #Other themes: theme_ipsum: Arial Narrow; theme_ipsum_es: Econ Sans Condensed; theme_ipsum_rc: Roboto Condensed; theme_ipsum_ps: IBM Plex Sans font; theme_ipsum_pub: Public Sans; theme_ipsum_tw: Titilium Web; theme_modern_rc: Roboto Condensed dark theme; theme_ft_rc: Dark theme based on FT’s dark theme (Roboto Condensed). Not available:  theme_ipsum_gs: Goldman Sans Condensed;
+    theme(axis.title.x = element_text(size = 14, face = "bold", hjust = 0.5) ,
+    axis.title.y = element_text(size = 14, face = "bold", hjust = 0.5) )+
+    scale_x_continuous(breaks = seq(0, 190, 5), limits = c(0, 185)) +
+    scale_x_break(c(55, 178)) 
+
+```
+
+Save the plot above as a Figure suitable for publication:
+```{r}
+# Obtain Working Directory to find data
+setwd(dirname(rstudioapi::getSourceEditorContext()$path))
+getwd()
+setwd('..')
+work_DIR <- getwd()
+
+ggsave(
+  filename="Figures/Genes_Mappings_Occurrence.png",
+  plot = last_plot(),
+  device = NULL,
+  path = NULL,
+  scale = 3,
+  width = 800,
+  height = 500,
+  units = "px",
+  dpi = 300,
+  limitsize = TRUE, 
+  bg = "#FFFFFF",
+)
+
+# Set Working Directory back to current folder
+setwd(dirname(rstudioapi::getSourceEditorContext()$path))
+work_DIR <- getwd()
+
+```
+
+
+Show how groups of enzymes (through EC-code) are covered in different species?
+```{r}
+## Add EC codes to dataframe
+#colnames(EC_terms_HGNC) <- c("Gene.name", "EC")
+##Merge EC code to dataframe
+#lipidGenes <- left_join(lipidGenes, EC_terms_HGNC, by = "Gene.name")
 
 # Update dataframe to
 #lipidGenes <- lipidGenes%>%mutate(EC_class = case_when(
@@ -657,42 +790,6 @@ colnames(lipidGenes) <- c("Gene.name", "mouse.occurrence", "celegans.occurrence"
 #  is.na(lipidGenes$EC) ~  lipidGenes$EC, #NA,
 #  TRUE ~ 'Unclassified'
 #))
-
-##Clear up irrelevant data to free up memory in workspace:
-#rm(list=setdiff(ls(), "lipidGenes"))
-```
-
-Visualize the homology mapped data
-```{r}
-##Transpose data for visualization:
-##Count nr of genes with NA(=0), 1, 2, 3... mappings; color is species  
-highestOccurence.mouse <- max(lipidGenes$mouse.occurence, na.rm = TRUE)
-missingOccurence.mouse <- sum(is.na(lipidGenes$mouse.occurence))
-highestOccurence.celegans <- max(lipidGenes$celegans.occurence, na.rm = TRUE)
-missingOccurence.celegans <- sum(is.na(lipidGenes$celegans.occurence))
-highestOccurence.dmelanogaster <- max(lipidGenes$dmelanogaster.occurence, na.rm = TRUE)
-missingOccurence.dmelanogaster <- sum(is.na(lipidGenes$dmelanogaster.occurence))
-
-##Create summary of occurence for whole gene list, and add column with species name
-occurrence.Mouse.Summary <- data.frame(table(lipidGenes$mouse.occurrence))
-occurrence.Mouse.Summary$species <- "mouse"
-
-occurrence.celegans.Summary <- data.frame(table(lipidGenes$celegans.occurrence))
-occurrence.celegans.Summary$species <- "celegans"
-
-occurrence.dmelanogaster.Summary <- data.frame(table(lipidGenes$dmelanogaster.occurrence))
-occurrence.dmelanogaster.Summary$species <- "dmelanogaster"
-
-#Merge the data in one dataframe:
-Data_overview <- bind_rows(occurrence.Mouse.Summary, occurrence.celegans.Summary, occurrence.dmelanogaster.Summary) %>% arrange(Var1)
-colnames(Data_overview) <- c("Mappings", "Occurrence", "species")
-
-library(ggplot2)
-
-# A basic scatterplot with color depending on Species
-ggplot(Data_overview, aes(x = Mappings, y = Occurrence, color = species)) + 
-    geom_point(size=6) #+
-    #theme_ipsum()
 
 ```
 
