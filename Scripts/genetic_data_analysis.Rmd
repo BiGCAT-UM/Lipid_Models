@@ -650,6 +650,24 @@ lipidGenes <- left_join(lipidGenes, mouse.occurrence, by = "Gene.name") %>%
                 mutate_each(funs(replace(., which(is.na(.)), 0)))
 colnames(lipidGenes) <- c("Gene.name", "mouse.occurrence", "celegans.occurrence", "dmelanogaster.occurrence", "scerevisiae.occurrence")
 
+##Find genes per species, which are not resembled but are found in others:
+comparison.mouse <- filter(lipidGenes, mouse.occurrence==0 & (celegans.occurrence !=0 | dmelanogaster.occurrence !=0 | scerevisiae.occurrence!=0))
+comparison.celegans <- filter(lipidGenes, celegans.occurrence==0 & (mouse.occurrence !=0 | dmelanogaster.occurrence !=0 | scerevisiae.occurrence!=0))
+comparison.dmelanogaster <- filter(lipidGenes, dmelanogaster.occurrence==0 & (celegans.occurrence !=0 | mouse.occurrence !=0 | scerevisiae.occurrence!=0))
+comparison.scerevisiae <- filter(lipidGenes, scerevisiae.occurrence==0 & (celegans.occurrence !=0 | dmelanogaster.occurrence !=0 | mouse.occurrence!=0))
+
+##Find genes per species, which are not resembled but are found in others, with only 1 mapping:
+comparison.mouse_one <- filter(lipidGenes, mouse.occurrence==0 & ((celegans.occurrence !=0 & celegans.occurrence <=1) | (dmelanogaster.occurrence !=0 & dmelanogaster.occurrence <= 1) | (scerevisiae.occurrence!=0 &  scerevisiae.occurrence<=0)))
+comparison.celegans_one <- filter(lipidGenes, celegans.occurrence==0 & ((mouse.occurrence !=0 & mouse.occurrence <=1) | (dmelanogaster.occurrence !=0 & dmelanogaster.occurrence <= 1) | (scerevisiae.occurrence!=0 &  scerevisiae.occurrence<=0)))
+comparison.dmelanogaster_one <- filter(lipidGenes, dmelanogaster.occurrence==0 & ((celegans.occurrence !=0 & celegans.occurrence <=1) | (mouse.occurrence !=0 & mouse.occurrence <= 1) | (scerevisiae.occurrence!=0 &  scerevisiae.occurrence<=0)))
+comparison.scerevisiae_one <- filter(lipidGenes, scerevisiae.occurrence==0 & ((celegans.occurrence !=0 & celegans.occurrence <=1) | (dmelanogaster.occurrence !=0 & dmelanogaster.occurrence <= 1) | (mouse.occurrence!=0 &  mouse.occurrence<=0)))
+
+#Print out the results of the comparison:
+paste0(nrow(comparison.mouse), " unknown mouse genes can be found in one of the other species, with ", nrow(comparison.mouse_one) ," having at least a one-to-one mapping")
+paste0(nrow(comparison.celegans), " unknown celegans genes can be found in one of the other species, with ", nrow(comparison.celegans_one) ," having at least a one-to-one mapping")
+paste0(nrow(comparison.dmelanogaster), " unknown dmelanogaster genes can be found in one of the other species, with ", nrow(comparison.dmelanogaster_one) ," having at least a one-to-one mapping")
+paste0(nrow(comparison.scerevisiae), " unknown scerevisiae genes can be found in one of the other species, with ", nrow(comparison.scerevisiae_one) ," having at least a one-to-one mapping")
+
 ##Clear up irrelevant data to free up memory in workspace:
 #rm(list=setdiff(ls(), c("lipidGenes", "top4_overlap")))
 ```
