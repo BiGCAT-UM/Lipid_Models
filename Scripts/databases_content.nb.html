@@ -1771,24 +1771,92 @@ beneath the code.</p>
 <p>Try executing this chunk by clicking the <em>Run</em> button within
 the chunk or by placing your cursor inside it and pressing
 <em>Ctrl+Shift+Enter</em>.</p>
+<div id="download-and-load-required-libraries" class="section level2">
+<h2>Download and load required libraries</h2>
+<!-- rnb-text-end -->
+<!-- rnb-chunk-begin -->
+<!-- rnb-source-begin eyJkYXRhIjoiYGBgclxuIyBjaGVjayBpZiBsaWJyYXJpZXMgYXJlIGFscmVhZHkgaW5zdGFsbGVkID4gb3RoZXJ3aXNlIGluc3RhbGwgaXRcbmlmKCFyZXF1aXJlTmFtZXNwYWNlKFwiQmlvY01hbmFnZXJcIiwgcXVpZXRseSA9IFRSVUUpKSBpbnN0YWxsLnBhY2thZ2VzKFwiQmlvY01hbmFnZXJcIixyZXBvcyA9IFwiaHR0cDovL2NyYW4udXMuci1wcm9qZWN0Lm9yZ1wiKVxuaWYoIVwicnN0dWRpb2FwaVwiICVpbiUgaW5zdGFsbGVkLnBhY2thZ2VzKCkpIEJpb2NNYW5hZ2VyOjppbnN0YWxsKFwicnN0dWRpb2FwaVwiKVxuI2xvYWQgbGlicmFyaWVzXG5saWJyYXJ5KHJzdHVkaW9hcGkpXG4jIHNldCB5b3VyIHdvcmtpbmcgZW52aXJvbm1lbnQgdG8gdGhlIGxvY2F0aW9uIHdoZXJlIHlvdXIgY3VycmVudCBzb3VyY2UgZmlsZSBpcyBzYXZlZCBpbnRvLlxuc2V0d2QoZGlybmFtZShyc3R1ZGlvYXBpOjpnZXRTb3VyY2VFZGl0b3JDb250ZXh0KCkkcGF0aCkpXG5gYGAifQ== -->
+<pre class="r"><code># check if libraries are already installed &gt; otherwise install it
+if(!requireNamespace(&quot;BiocManager&quot;, quietly = TRUE)) install.packages(&quot;BiocManager&quot;,repos = &quot;http://cran.us.r-project.org&quot;)
+if(!&quot;rstudioapi&quot; %in% installed.packages()) BiocManager::install(&quot;rstudioapi&quot;)
+#load libraries
+library(rstudioapi)
+# set your working environment to the location where your current source file is saved into.
+setwd(dirname(rstudioapi::getSourceEditorContext()$path))</code></pre>
+<!-- rnb-source-end -->
+<!-- rnb-chunk-end -->
+<!-- rnb-text-begin -->
+</div>
 <div id="bigg-database" class="section level2">
 <h2>BiGG database</h2>
 <p>Data downloaded from: <a href="http://bigg.ucsd.edu/data_access" class="uri">http://bigg.ucsd.edu/data_access</a> ; file called
 bigg_models_metabolites.txt</p>
 <!-- rnb-text-end -->
 <!-- rnb-chunk-begin -->
-<!-- rnb-source-begin eyJkYXRhIjoiYGBgclxuIyNEb3dubG9hZCBuZXcgZGF0YSBpZiBuZWVkZWQgaGVyZTpcbiNhZGQgd2dldCBodHRwOi8vYmlnZy51Y3NkLmVkdS9zdGF0aWMvbmFtZXNwYWNlL2JpZ2dfbW9kZWxzX21ldGFib2xpdGVzLnR4dFxuXG4jIyBsb2FkIHRoZSBkYXRhXG5gYGAifQ== -->
-<pre class="r"><code>##Download new data if needed here:
-#add wget http://bigg.ucsd.edu/static/namespace/bigg_models_metabolites.txt
-
-## load the data</code></pre>
+<!-- rnb-source-begin eyJkYXRhIjoiYGBgclxuIyBPYnRhaW4gV29ya2luZyBEaXJlY3RvcnkgdG8gZmluZCBkYXRhIGluIERhdGEgZm9sZGVyXG5zZXR3ZChkaXJuYW1lKHJzdHVkaW9hcGk6OmdldFNvdXJjZUVkaXRvckNvbnRleHQoKSRwYXRoKSlcbmdldHdkKClcbmBgYCJ9 -->
+<pre class="r"><code># Obtain Working Directory to find data in Data folder
+setwd(dirname(rstudioapi::getSourceEditorContext()$path))
+getwd()</code></pre>
 <!-- rnb-source-end -->
+<!-- rnb-output-begin eyJkYXRhIjoiWzFdIFwiL2hvbWUvZGVuaXNlc2xlbnRlci9vd25DbG91ZC9BcnRpY2xlcy9FcGlMaXBpZE5ldC9TcGVjaWVzX3BhcGVyL0xpcGlkX01vZGVscy9TY3JpcHRzXCJcbiJ9 -->
+<pre><code>[1] &quot;/home/deniseslenter/ownCloud/Articles/EpiLipidNet/Species_paper/Lipid_Models/Scripts&quot;</code></pre>
+<!-- rnb-output-end -->
+<!-- rnb-source-begin eyJkYXRhIjoiYGBgclxuc2V0d2QoJy4uJylcbmBgYCJ9 -->
+<pre class="r"><code>setwd(&#39;..&#39;)</code></pre>
+<!-- rnb-source-end -->
+<!-- rnb-output-begin eyJkYXRhIjoiV2FybmluZzogVGhlIHdvcmtpbmcgZGlyZWN0b3J5IHdhcyBjaGFuZ2VkIHRvIC9ob21lL2RlbmlzZXNsZW50ZXIvb3duQ2xvdWQvQXJ0aWNsZXMvRXBpTGlwaWROZXQvU3BlY2llc19wYXBlci9MaXBpZF9Nb2RlbHMgaW5zaWRlIGEgbm90ZWJvb2sgY2h1bmsuIFRoZSB3b3JraW5nIGRpcmVjdG9yeSB3aWxsIGJlIHJlc2V0IHdoZW4gdGhlIGNodW5rIGlzIGZpbmlzaGVkIHJ1bm5pbmcuIFVzZSB0aGUga25pdHIgcm9vdC5kaXIgb3B0aW9uIGluIHRoZSBzZXR1cCBjaHVuayB0byBjaGFuZ2UgdGhlIHdvcmtpbmcgZGlyZWN0b3J5IGZvciBub3RlYm9vayBjaHVua3MuXG4ifQ== -->
+<pre><code>Warning: The working directory was changed to /home/deniseslenter/ownCloud/Articles/EpiLipidNet/Species_paper/Lipid_Models inside a notebook chunk. The working directory will be reset when the chunk is finished running. Use the knitr root.dir option in the setup chunk to change the working directory for notebook chunks.</code></pre>
+<!-- rnb-output-end -->
+<!-- rnb-source-begin eyJkYXRhIjoiYGBgclxud29ya19ESVIgPC0gZ2V0d2QoKVxuXG4jTGlicmFyeSB0byBkb3dubG9hZCBkYXRhIGZyb20gb25saW5lIGZpbGVzOlxuaWYoIVwiZG93bmxvYWRlclwiICVpbiUgaW5zdGFsbGVkLnBhY2thZ2VzKCkpe2luc3RhbGwucGFja2FnZXMoXCJkb3dubG9hZGVyXCIpfVxucmVxdWlyZShkb3dubG9hZGVyKVxuXG4jI0Rvd25sb2FkIG5ldyBkYXRhIGlmIG5lZWRlZCBoZXJlOlxuaWYoZmlsZS5leGlzdHMoXCJEYXRhL2JpZ2dfbW9kZWxzX21ldGFib2xpdGVzLnR4dFwiKSl7cHJpbnQoXCJCaUdHIGFscmVhZHkgZG93bmxvYWRlZFwiKX1lbHNle1xuZmlsZVVybCA8LSBcImh0dHA6Ly9iaWdnLnVjc2QuZWR1L3N0YXRpYy9uYW1lc3BhY2UvYmlnZ19tb2RlbHNfbWV0YWJvbGl0ZXMudHh0XCJcbnJlcXVpcmUoZG93bmxvYWRlcilcbmRvd25sb2FkKGZpbGVVcmwsIFwiRGF0YS9iaWdnX21vZGVsc19tZXRhYm9saXRlcy50eHRcIiwgbW9kZSA9IFwid2JcIilcbn1cbmBgYCJ9 -->
+<pre class="r"><code>work_DIR &lt;- getwd()
+
+#Library to download data from online files:
+if(!&quot;downloader&quot; %in% installed.packages()){install.packages(&quot;downloader&quot;)}
+require(downloader)
+
+##Download new data if needed here:
+if(file.exists(&quot;Data/bigg_models_metabolites.txt&quot;)){print(&quot;BiGG already downloaded&quot;)}else{
+fileUrl &lt;- &quot;http://bigg.ucsd.edu/static/namespace/bigg_models_metabolites.txt&quot;
+require(downloader)
+download(fileUrl, &quot;Data/bigg_models_metabolites.txt&quot;, mode = &quot;wb&quot;)
+}</code></pre>
+<!-- rnb-source-end -->
+<!-- rnb-output-begin eyJkYXRhIjoiWzFdIFwiQmlHRyBhbHJlYWR5IGRvd25sb2FkZWRcIlxuIn0= -->
+<pre><code>[1] &quot;BiGG already downloaded&quot;</code></pre>
+<!-- rnb-output-end -->
+<!-- rnb-source-begin eyJkYXRhIjoiYGBgclxuIyMgbG9hZCB0aGUgZGF0YVxuYmlnZyA9IHJlYWQudGFibGUoJ0RhdGEvYmlnZ19tb2RlbHNfbWV0YWJvbGl0ZXMudHh0JyxzZXA9J1xcdCcsIGhlYWRlciA9IFRSVUUsIGZpbGwgPSBUUlVFKVxuYGBgIn0= -->
+<pre class="r"><code>## load the data
+bigg = read.table(&#39;Data/bigg_models_metabolites.txt&#39;,sep=&#39;\t&#39;, header = TRUE, fill = TRUE)</code></pre>
+<!-- rnb-source-end -->
+<!-- rnb-chunk-end -->
+<!-- rnb-text-begin -->
+</div>
+<div id="kegg-database" class="section level2">
+<h2>KEGG database</h2>
+<p>Data will be downloaded from the KEGG API (see KEGG documentation <a href="https://www.kegg.jp/kegg/rest/keggapi.html" class="uri">https://www.kegg.jp/kegg/rest/keggapi.html</a> and API calls
+in R <a href="https://www.dataquest.io/blog/r-api-tutorial/" class="uri">https://www.dataquest.io/blog/r-api-tutorial/</a>)</p>
+<!-- rnb-text-end -->
+<!-- rnb-chunk-begin -->
+<!-- rnb-source-begin eyJkYXRhIjoiYGBgclxuIyMgRXhlY3V0ZSBBUEkgY2FsbHMsIGV4YW1wbGUgdG8gb2J0YWluIGNoZW1pY2FsIGNvbXBvdW5kcyBmb3IgYSBQVyBtYXA6XG5mb3IgKGkgaW4gMTpsZW5ndGgobGlwaWRfa2VnZ19tYXBzX0FQSWNhbGwpKSB7XG4gIHJlcyA9IEdFVChsaXBpZF9rZWdnX21hcHNfQVBJY2FsbFtpXSlcbiAgS2VnZ19kYXRhIDwtIHJhd1RvQ2hhcihyZXMkY29udGVudClcbiAgY2xlYW5lZF9LZWdnX2RhdGEgPC0gZnJlYWQodGV4dCA9IEtlZ2dfZGF0YSwgLCBoZWFkZXI9RkFMU0UpXG4gIGRmIDwtIGRhdGEuZnJhbWUoY2xlYW5lZF9LZWdnX2RhdGEpXG4gIEtlZ2dfdG90YWwgPC0gcmJpbmQoS2VnZ190b3RhbCxkZilcbn1cblxuYGBgIn0= -->
+<pre class="r"><code>## Execute API calls, example to obtain chemical compounds for a PW map:
+for (i in 1:length(lipid_kegg_maps_APIcall)) {
+  res = GET(lipid_kegg_maps_APIcall[i])
+  Kegg_data &lt;- rawToChar(res$content)
+  cleaned_Kegg_data &lt;- fread(text = Kegg_data, , header=FALSE)
+  df &lt;- data.frame(cleaned_Kegg_data)
+  Kegg_total &lt;- rbind(Kegg_total,df)
+}
+</code></pre>
+<!-- rnb-source-end -->
+<!-- rnb-output-begin eyJkYXRhIjoiRXJyb3IgaW4gcmJpbmQoS2VnZ190b3RhbCwgZGYpIDogb2JqZWN0ICdLZWdnX3RvdGFsJyBub3QgZm91bmRcbiJ9 -->
+<pre><code>Error in rbind(Kegg_total, df) : object &#39;Kegg_total&#39; not found</code></pre>
+<!-- rnb-output-end -->
 <!-- rnb-chunk-end -->
 <!-- rnb-text-begin -->
 <!-- rnb-text-end -->
 </div>
 
-<div id="rmd-source-code">LS0tCnRpdGxlOiAiTGlwaWRzIHBhdGh3YXkgYW5kIG5ldHdvcmsgZGF0YWJhc2VzIGNvbnRlbnQiCmF1dGhvcjogCi0gIkRlbmlzZVNsMjIiCmRhdGU6ICIzMC8xMS8yMDIyIgpvdXRwdXQ6IGh0bWxfbm90ZWJvb2sKLS0tCgpUaGlzIGlzIGFuIFtSIE1hcmtkb3duXShodHRwOi8vcm1hcmtkb3duLnJzdHVkaW8uY29tKSBOb3RlYm9vay4gV2hlbiB5b3UgZXhlY3V0ZSBjb2RlIHdpdGhpbiB0aGUgbm90ZWJvb2ssIHRoZSByZXN1bHRzIGFwcGVhciBiZW5lYXRoIHRoZSBjb2RlLiAKClRyeSBleGVjdXRpbmcgdGhpcyBjaHVuayBieSBjbGlja2luZyB0aGUgKlJ1biogYnV0dG9uIHdpdGhpbiB0aGUgY2h1bmsgb3IgYnkgcGxhY2luZyB5b3VyIGN1cnNvciBpbnNpZGUgaXQgYW5kIHByZXNzaW5nICpDdHJsK1NoaWZ0K0VudGVyKi4gCgoKIyMgQmlHRyBkYXRhYmFzZQpEYXRhIGRvd25sb2FkZWQgZnJvbTogaHR0cDovL2JpZ2cudWNzZC5lZHUvZGF0YV9hY2Nlc3MgOyBmaWxlIGNhbGxlZCBiaWdnX21vZGVsc19tZXRhYm9saXRlcy50eHQKYGBge3J9CiMjRG93bmxvYWQgbmV3IGRhdGEgaWYgbmVlZGVkIGhlcmU6CiNhZGQgd2dldCBodHRwOi8vYmlnZy51Y3NkLmVkdS9zdGF0aWMvbmFtZXNwYWNlL2JpZ2dfbW9kZWxzX21ldGFib2xpdGVzLnR4dAoKIyMgbG9hZCB0aGUgZGF0YQpgYGAKCgo=</div>
+<div id="rmd-source-code">LS0tCnRpdGxlOiAiTGlwaWRzIHBhdGh3YXkgYW5kIG5ldHdvcmsgZGF0YWJhc2VzIGNvbnRlbnQiCmF1dGhvcjogCi0gIkRlbmlzZVNsMjIiCmRhdGU6ICIzMC8xMS8yMDIyIgpvdXRwdXQ6IGh0bWxfbm90ZWJvb2sKLS0tCgpUaGlzIGlzIGFuIFtSIE1hcmtkb3duXShodHRwOi8vcm1hcmtkb3duLnJzdHVkaW8uY29tKSBOb3RlYm9vay4gV2hlbiB5b3UgZXhlY3V0ZSBjb2RlIHdpdGhpbiB0aGUgbm90ZWJvb2ssIHRoZSByZXN1bHRzIGFwcGVhciBiZW5lYXRoIHRoZSBjb2RlLiAKClRyeSBleGVjdXRpbmcgdGhpcyBjaHVuayBieSBjbGlja2luZyB0aGUgKlJ1biogYnV0dG9uIHdpdGhpbiB0aGUgY2h1bmsgb3IgYnkgcGxhY2luZyB5b3VyIGN1cnNvciBpbnNpZGUgaXQgYW5kIHByZXNzaW5nICpDdHJsK1NoaWZ0K0VudGVyKi4gCgojIyBEb3dubG9hZCBhbmQgbG9hZCByZXF1aXJlZCBsaWJyYXJpZXMKYGBge3J9CiMgY2hlY2sgaWYgbGlicmFyaWVzIGFyZSBhbHJlYWR5IGluc3RhbGxlZCA+IG90aGVyd2lzZSBpbnN0YWxsIGl0CmlmKCFyZXF1aXJlTmFtZXNwYWNlKCJCaW9jTWFuYWdlciIsIHF1aWV0bHkgPSBUUlVFKSkgaW5zdGFsbC5wYWNrYWdlcygiQmlvY01hbmFnZXIiLHJlcG9zID0gImh0dHA6Ly9jcmFuLnVzLnItcHJvamVjdC5vcmciKQppZighInJzdHVkaW9hcGkiICVpbiUgaW5zdGFsbGVkLnBhY2thZ2VzKCkpIEJpb2NNYW5hZ2VyOjppbnN0YWxsKCJyc3R1ZGlvYXBpIikKI2xvYWQgbGlicmFyaWVzCmxpYnJhcnkocnN0dWRpb2FwaSkKIyBzZXQgeW91ciB3b3JraW5nIGVudmlyb25tZW50IHRvIHRoZSBsb2NhdGlvbiB3aGVyZSB5b3VyIGN1cnJlbnQgc291cmNlIGZpbGUgaXMgc2F2ZWQgaW50by4Kc2V0d2QoZGlybmFtZShyc3R1ZGlvYXBpOjpnZXRTb3VyY2VFZGl0b3JDb250ZXh0KCkkcGF0aCkpCmBgYAoKCiMjIEJpR0cgZGF0YWJhc2UKRGF0YSBkb3dubG9hZGVkIGZyb206IGh0dHA6Ly9iaWdnLnVjc2QuZWR1L2RhdGFfYWNjZXNzIDsgZmlsZSBjYWxsZWQgYmlnZ19tb2RlbHNfbWV0YWJvbGl0ZXMudHh0CmBgYHtyfQojIE9idGFpbiBXb3JraW5nIERpcmVjdG9yeSB0byBmaW5kIGRhdGEgaW4gRGF0YSBmb2xkZXIKc2V0d2QoZGlybmFtZShyc3R1ZGlvYXBpOjpnZXRTb3VyY2VFZGl0b3JDb250ZXh0KCkkcGF0aCkpCmdldHdkKCkKc2V0d2QoJy4uJykKd29ya19ESVIgPC0gZ2V0d2QoKQoKI0xpYnJhcnkgdG8gZG93bmxvYWQgZGF0YSBmcm9tIG9ubGluZSBmaWxlczoKaWYoISJkb3dubG9hZGVyIiAlaW4lIGluc3RhbGxlZC5wYWNrYWdlcygpKXtpbnN0YWxsLnBhY2thZ2VzKCJkb3dubG9hZGVyIil9CnJlcXVpcmUoZG93bmxvYWRlcikKCiMjRG93bmxvYWQgbmV3IGRhdGEgaWYgbmVlZGVkIGhlcmU6CmlmKGZpbGUuZXhpc3RzKCJEYXRhL2JpZ2dfbW9kZWxzX21ldGFib2xpdGVzLnR4dCIpKXtwcmludCgiQmlHRyBhbHJlYWR5IGRvd25sb2FkZWQiKX1lbHNlewpmaWxlVXJsIDwtICJodHRwOi8vYmlnZy51Y3NkLmVkdS9zdGF0aWMvbmFtZXNwYWNlL2JpZ2dfbW9kZWxzX21ldGFib2xpdGVzLnR4dCIKcmVxdWlyZShkb3dubG9hZGVyKQpkb3dubG9hZChmaWxlVXJsLCAiRGF0YS9iaWdnX21vZGVsc19tZXRhYm9saXRlcy50eHQiLCBtb2RlID0gIndiIikKfQoKIyMgbG9hZCB0aGUgZGF0YTsgdHh0IGZpbGUgd2l0aCBoZWFkZXJzLCB0YWItc2VwYXJhdGVkLCBzb21lIGZpZWxkIGFyZSBlbXB0eSBzbyBuZWVkcyAiZmlsbCA9VFJVRSIgLgpiaWdnID0gcmVhZC50YWJsZSgnRGF0YS9iaWdnX21vZGVsc19tZXRhYm9saXRlcy50eHQnLHNlcD0nXHQnLCBoZWFkZXIgPSBUUlVFLCBmaWxsID0gVFJVRSkgCmBgYAojIyBLRUdHIGRhdGFiYXNlCkRhdGEgd2lsbCBiZSBkb3dubG9hZGVkIGZyb20gdGhlIEtFR0cgQVBJIChzZWUgS0VHRyBkb2N1bWVudGF0aW9uIGh0dHBzOi8vd3d3LmtlZ2cuanAva2VnZy9yZXN0L2tlZ2dhcGkuaHRtbCBhbmQgQVBJIGNhbGxzIGluIFIgaHR0cHM6Ly93d3cuZGF0YXF1ZXN0LmlvL2Jsb2cvci1hcGktdHV0b3JpYWwvKQpgYGB7cn0KIyNJbnN0YWxsIGFuZCBsb2FkIHJlcXVpcmVkIHBhY2thZ2VzOgppbnN0YWxsLnBhY2thZ2VzKGMoImh0dHIiLCAianNvbmxpdGUiLCAiZGF0YS50YWJsZSIpKQpsaWJyYXJ5KGh0dHIpCmxpYnJhcnkoanNvbmxpdGUpCmxpYnJhcnkoZGF0YS50YWJsZSkKCiMjIHBhdGh3YXkgbWFwIElEcyBsaXN0ZWQgdW5kZXIgIjEuMyBMaXBpZCBtZXRhYm9saXNtIgpsaXBpZF9rZWdnX21hcHMgPC0gYygiMDAwNjEiLCAiMDAwNjIiLCAiMDAwNzEiLCAiMDAwNzMiLCAiMDAxMDAiLCAiMDAxMjAiLCAiMDAxMjEiLCAiMDAxNDAiLCAiMDA1NjEiLCAiMDA1NjQiLCAiMDA1NjUiLCAiMDA2MDAiLCAiMDA1OTAiLCAiMDA1OTEiLCAiMDA1OTIiLCAiMDEwNDAiKQojI0FkZCBVUkwgZm9yIGVhY2ggaXRlbToKbGlwaWRfa2VnZ19tYXBzX0FQSWNhbGwgPC0gcGFzdGUoImh0dHBzOi8vcmVzdC5rZWdnLmpwL2xpbmsvY3BkL21hcCIsIGxpcGlkX2tlZ2dfbWFwcywgc2VwPSIiKQoKIyNDcmVhdGUgYW4gZW1wdHkgZGF0YWZyYW1lIHRvIHN0b3JlIHRoZSByZXN1bHRzIG9mIHRoZSBsb29wOgpLZWdnX3RvdGFsID0gZGF0YS5mcmFtZSgpCgojIyBFeGVjdXRlIEFQSSBjYWxscywgZXhhbXBsZSB0byBvYnRhaW4gY2hlbWljYWwgY29tcG91bmRzIGZvciBhIFBXIG1hcDoKZm9yIChpIGluIDE6bGVuZ3RoKGxpcGlkX2tlZ2dfbWFwc19BUEljYWxsKSkgewogIHJlcyA9IEdFVChsaXBpZF9rZWdnX21hcHNfQVBJY2FsbFtpXSkKICBLZWdnX2RhdGEgPC0gcmF3VG9DaGFyKHJlcyRjb250ZW50KQogIGNsZWFuZWRfS2VnZ19kYXRhIDwtIGZyZWFkKHRleHQgPSBLZWdnX2RhdGEsIGhlYWRlcj1GQUxTRSkKICBkZiA8LSBkYXRhLmZyYW1lKGNsZWFuZWRfS2VnZ19kYXRhKQogIEtlZ2dfdG90YWwgPC0gcmJpbmQoS2VnZ190b3RhbCxkZikKfQoKCmBgYAoKCg==</div>
 
 
 
