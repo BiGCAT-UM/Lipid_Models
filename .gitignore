@@ -35,3 +35,4 @@ vignettes/*.pdf
 # Shiny token, see https://shiny.rstudio.com/articles/shinyapps.html
 rsconnect/
 Data/bigg_models_metabolites.txt
+Data/bigg_models_reactions.txt
