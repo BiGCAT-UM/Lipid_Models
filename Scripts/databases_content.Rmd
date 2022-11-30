@@ -43,13 +43,17 @@ download(fileUrl, "Data/bigg_models_metabolites.txt", mode = "wb")
 }
 
 ## load the data; txt file with headers, tab-separated, some field are empty so needs "fill =TRUE" .
-bigg = read.table('Data/bigg_models_metabolites.txt',sep='\t', header = TRUE, fill = TRUE) 
+bigg_total = read.table('Data/bigg_models_metabolites.txt',sep='\t', header = TRUE, fill = TRUE) 
 ```
 ## KEGG database
 Data will be downloaded from the KEGG API (see KEGG documentation https://www.kegg.jp/kegg/rest/keggapi.html and API calls in R https://www.dataquest.io/blog/r-api-tutorial/)
 ```{r}
 ##Install and load required packages:
-install.packages(c("httr", "jsonlite", "data.table"))
+api_packages <- c("httr", "jsonlite", "data.table")
+for (i in 1:length(api_packages)) {
+if(!api_packages[i] %in% installed.packages()){install.packages(api_packages[i])}
+}
+#install.packages(c("httr", "jsonlite", "data.table"))
 library(httr)
 library(jsonlite)
 library(data.table)
@@ -71,7 +75,8 @@ for (i in 1:length(lipid_kegg_maps_APIcall)) {
   Kegg_total <- rbind(Kegg_total,df)
 }
 
-
+##Keep only dataframes with name "_total" to safe space
+rm(list = ls()[!grepl("_total", ls())])
 ```
 
 
