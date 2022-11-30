@@ -11,4 +11,7 @@ We then cluster these genes based on the type of reaction they catalyze, based o
 
 ![image](https://user-images.githubusercontent.com/26277832/203064727-334f14d8-cb4a-461f-8e58-81fea0590bf0.png)
 
-The genes that overlap between two or more databases, are then compared to other species for homologs.
+The genes that overlap between two or more databases, are then compared to other species for homologs:
+
+![Genes_Mappings_Occurrence](https://user-images.githubusercontent.com/26277832/204802112-6b1aaef3-2b1d-4b9f-af80-accb3ee32d06.png)
+
