@@ -6,6 +6,12 @@ date: "01/08/2022"
 output: html_notebook
 ---
 
+This is an [R Markdown](http://rmarkdown.rstudio.com) Notebook. When you execute code within the notebook, the results appear beneath the code. 
+
+Try executing this chunk by clicking the *Run* button within the chunk or by placing your cursor inside it and pressing *Ctrl+Shift+Enter*. 
+
+## README: 
+
 In order to establish the potential genetic relevance of a certain modeling species in lipid metabolism, we take these steps:
 1. First, we obtain human genes from three databases (Gene Ontology, Reactome, and WikiPathways) together to establish a list of relevant proteins in lipid metabolism.
 2. Second, we compare these three databases together, while grouping on EC-nomenclature/LIPID MAPS ontology.
