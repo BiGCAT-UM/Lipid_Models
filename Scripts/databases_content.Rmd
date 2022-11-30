@@ -35,15 +35,23 @@ work_DIR <- getwd()
 if(!"downloader" %in% installed.packages()){install.packages("downloader")}
 require(downloader)
 
-##Download new data if needed here:
-if(file.exists("Data/bigg_models_metabolites.txt")){print("BiGG already downloaded")}else{
+##Download metabolomics data if needed here:
+if(file.exists("Data/bigg_models_metabolites.txt")){print("BiGG metabolites already downloaded")}else{
 fileUrl <- "http://bigg.ucsd.edu/static/namespace/bigg_models_metabolites.txt"
 require(downloader)
 download(fileUrl, "Data/bigg_models_metabolites.txt", mode = "wb")
 }
 
+##Download Reaction data if needed here:
+if(file.exists("Data/bigg_models_reactions.txt")){print("BiGG reactions already downloaded")}else{
+fileUrl <- "http://bigg.ucsd.edu/static/namespace/bigg_models_reactions.txt"
+require(downloader)
+download(fileUrl, "Data/bigg_models_reactions.txt", mode = "wb")
+}
+
 ## load the data; txt file with headers, tab-separated, some field are empty so needs "fill =TRUE" .
-bigg_total = read.table('Data/bigg_models_metabolites.txt',sep='\t', header = TRUE, fill = TRUE) 
+bigg_metabolites_total = read.table('Data/bigg_models_metabolites.txt',sep='\t', header = TRUE, fill = TRUE) 
+bigg_reactions_total = read.table('Data/bigg_models_reactions.txt',sep='\t', header = TRUE, fill = TRUE) 
 ```
 ## KEGG database
 Data will be downloaded from the KEGG API (see KEGG documentation https://www.kegg.jp/kegg/rest/keggapi.html and API calls in R https://www.dataquest.io/blog/r-api-tutorial/)
@@ -74,6 +82,11 @@ for (i in 1:length(lipid_kegg_maps_APIcall)) {
   df <- data.frame(cleaned_Kegg_data)
   Kegg_total <- rbind(Kegg_total,df)
 }
+
+##List of human genes in pathway hsa00010
+#https://rest.kegg.jp/link/hsa/hsa00010
+##List of reactions in pathway map00010
+#https://rest.kegg.jp/link/rn/map00010
 
 ##Keep only dataframes with name "_total" to safe space
 rm(list = ls()[!grepl("_total", ls())])
