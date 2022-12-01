@@ -52,6 +52,9 @@ download(fileUrl, "Data/bigg_models_reactions.txt", mode = "wb")
 ## load the data; txt file with headers, tab-separated, some field are empty so needs "fill =TRUE" .
 bigg_metabolites_total = read.table('Data/bigg_models_metabolites.txt',sep='\t', header = TRUE, fill = TRUE) 
 bigg_reactions_total = read.table('Data/bigg_models_reactions.txt',sep='\t', header = TRUE, fill = TRUE) 
+
+# Since we are NOT pre-selecting Lipid pathways, we first need to filter the data
+
 ```
 ## KEGG database
 Data will be downloaded from the KEGG API (see KEGG documentation https://www.kegg.jp/kegg/rest/keggapi.html and API calls in R https://www.dataquest.io/blog/r-api-tutorial/)
@@ -67,29 +70,57 @@ library(jsonlite)
 library(data.table)
 
 ## pathway map IDs listed under "1.3 Lipid metabolism"
-lipid_kegg_maps <- c("00061", "00062", "00071", "00073", "00100", "00120", "00121", "00140", "00561", "00564", "00565", "00600", "00590", "00591", "00592", "01040")
+lipid_kegg_maps <- c("00061", "00062", "00071", "00073", "00100", "00120", "00121", "00140", "00561", "00564", "00565", "00600", "00590", "00591", "00592", "01040") 
+
 ##Add URL for each item:
-lipid_kegg_maps_APIcall <- paste("https://rest.kegg.jp/link/cpd/map", lipid_kegg_maps, sep="")
+lipid_kegg_metabolites_APIcall <- paste("https://rest.kegg.jp/link/cpd/map", lipid_kegg_maps, sep="")
+lipid_kegg_reactions_APIcall <- paste("https://rest.kegg.jp/link/rn/map", lipid_kegg_maps, sep="")
+lipid_kegg_genes_APIcall <- paste("https://rest.kegg.jp/link/hsa/hsa", lipid_kegg_maps, sep="")
 
 ##Create an empty dataframe to store the results of the loop:
-Kegg_total = data.frame()
+Kegg_metabolites_total = data.frame()
+Kegg_reactions_total = data.frame()
+Kegg_genes_total = data.frame()
 
 ## Execute API calls, example to obtain chemical compounds for a PW map:
-for (i in 1:length(lipid_kegg_maps_APIcall)) {
-  res = GET(lipid_kegg_maps_APIcall[i])
-  Kegg_data <- rawToChar(res$content)
-  cleaned_Kegg_data <- fread(text = Kegg_data, header=FALSE)
-  df <- data.frame(cleaned_Kegg_data)
-  Kegg_total <- rbind(Kegg_total,df)
+for (i in 1:length(lipid_kegg_metabolites_APIcall)) {
+  ##Get the metabolites:
+  res_metabolites = GET(lipid_kegg_metabolites_APIcall[i])
+  Kegg_data_metabolites <- rawToChar(res_metabolites$content)
+  if(length(res_metabolites$content)>1){
+  cleaned_Kegg_data_metabolites <- fread(text = Kegg_data_metabolites, header=FALSE)
+  df_metabolites <- data.frame(cleaned_Kegg_data_metabolites)
+  Kegg_metabolites_total <- rbind(Kegg_metabolites_total,df_metabolites)
+  }
+  
+  ##Get the reactions:
+  #Note: 00121 will give an error, no data!
+  res_reactions = GET(lipid_kegg_reactions_APIcall[i])
+  Kegg_data_reactions <- rawToChar(res_reactions$content)
+  if(length(res_reactions$content)>1){
+  cleaned_Kegg_data_reactions <- fread(text = Kegg_data_reactions, header=FALSE)
+  df_reactions <- data.frame(cleaned_Kegg_data_reactions)
+  Kegg_reactions_total <- rbind(Kegg_reactions_total,df_reactions)
+  }
+  
+  ##Get the genes:
+  res_genes = GET(lipid_kegg_genes_APIcall[i])
+  Kegg_data_genes <- rawToChar(res_genes$content)
+  if(length(res_genes$content)>1){
+  cleaned_Kegg_data_genes <- fread(text = Kegg_data_genes, header=FALSE, fill = TRUE)
+  df_genes <- data.frame(cleaned_Kegg_data_genes)
+  Kegg_genes_total <- rbind(Kegg_genes_total,df_genes)
+  }
 }
-
-##List of human genes in pathway hsa00010
-#https://rest.kegg.jp/link/hsa/hsa00010
-##List of reactions in pathway map00010
-#https://rest.kegg.jp/link/rn/map00010
 
 ##Keep only dataframes with name "_total" to safe space
 rm(list = ls()[!grepl("_total", ls())])
+
+# Since we are pre-selecting Lipid pathways, we can just take the count of unique entries:
+unique_lipids_kegg <- nrow(unique(Kegg_metabolites_total[2]))
+unique_lipid_reactions_kegg <- nrow(unique(Kegg_reactions_total[2]))
+unique_lipids_genes_kegg <- nrow(unique(Kegg_genes_total[2]))
+
 ```
 
 
